@@ -652,6 +652,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .fy-form .lbl { color: var(--ink2); margin-bottom: 10px; display: block; }
 .bord .field label { color: var(--ink2); }
 .fy-card { display: grid; gap: 10px; align-content: start; }
+.pcard__tag, .pcard__ach { color: var(--ivory); }
 .fy-card .pcard__t p, .fy-card .cov__txt { color: var(--ink2); }
 .fy-card .h3 { color: var(--ink); }
 .fy-card .btn { justify-self: start; }
