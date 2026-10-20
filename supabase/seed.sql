@@ -2,7 +2,7 @@
 begin;
 insert into public.members (id, slug, name, metier, job_id, type, city, bio, domains, img) overriding system value values
 (1, 'ahmed', 'Yassine B.', 'Tailleur', 'job-6abce8ce', 'Indépendant', 'Casablanca', 'Vingt ans d’atelier. Il a monté le premier patron de la Veste Signature.', '{d14}', 'u-cercle-3'),
-(2, 'marouane', 'Salma R.', 'Photographe', 'job-23a8c557', 'Indépendant', 'Fès', 'Elle photographie les mains plus que les visages.', '{d13,d15}', 'u-cercle-1'),
+(2, 'marouan', 'Salma R.', 'Photographe', 'job-23a8c557', 'Indépendant', 'Fès', 'Elle photographie les mains plus que les visages.', '{d13,d15}', 'u-cercle-1'),
 (3, 'wassim', 'Karim E.', 'Designer', 'job-6e56498f', 'Salarié', 'Casablanca', 'Designer produit, il dessine le coffret ACHIRA.', '{d13}', 'u-cercle-2'),
 (4, 'meriem-a', 'Meriem A.', 'Expert-comptable', 'job-cba2bbab', 'Cabinet', 'Rabat', 'Son cabinet tient les comptes des projets du cercle.', '{d1,d3,d12}', null),
 (5, 'othmane-k', 'Othmane K.', 'Juriste d’entreprise', 'job-1118d7c9', 'Indépendant', 'Casablanca', 'Statuts, contrats, propriété des créations.', '{d7}', null),

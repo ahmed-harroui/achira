@@ -8,7 +8,7 @@ window.ACHIRA_DATA = {
 
   members: [
     { id: 1, slug: 'ahmed', name: 'Yassine B.', metier: 'Tailleur', type: 'Indépendant', city: 'Casablanca', domains: ['d14'], img: 'u-cercle-3', bio: 'Vingt ans d’atelier. Il a monté le premier patron de la Veste Signature.' },
-    { id: 2, slug: 'marouane', name: 'Salma R.', metier: 'Photographe', type: 'Indépendant', city: 'Fès', domains: ['d13', 'd15'], img: 'u-cercle-1', bio: 'Elle photographie les mains plus que les visages.' },
+    { id: 2, slug: 'marouan', name: 'Salma R.', metier: 'Photographe', type: 'Indépendant', city: 'Fès', domains: ['d13', 'd15'], img: 'u-cercle-1', bio: 'Elle photographie les mains plus que les visages.' },
     { id: 3, slug: 'wassim', name: 'Karim E.', metier: 'Designer', type: 'Salarié', city: 'Casablanca', domains: ['d13'], img: 'u-cercle-2', bio: 'Designer produit, il dessine le coffret ACHIRA.' },
     { id: 4, slug: 'meriem-a', name: 'Meriem A.', metier: 'Expert-comptable', type: 'Cabinet', city: 'Rabat', domains: ['d1', 'd3', 'd12'], img: '', bio: 'Son cabinet tient les comptes des projets du cercle.' },
     { id: 5, slug: 'othmane-k', name: 'Othmane K.', metier: 'Juriste d’entreprise', type: 'Indépendant', city: 'Casablanca', domains: ['d7'], img: '', bio: 'Statuts, contrats, propriété des créations.' },
