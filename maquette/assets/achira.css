@@ -383,6 +383,31 @@ a.chip:hover { border-color: var(--ivory); }
 .lvl--prioritaire { background: var(--achira); border-color: var(--achira); color: var(--ivory); }
 .lvl--important { color: var(--champ); border-color: rgba(197,166,118,.5); }
 .lvl--utile { color: var(--iv60); }
+/* ce que le dernier choix a changé */
+.wr-change { display: grid; gap: 8px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(197,166,118,.55); background: rgba(197,166,118,.1); }
+.wr-change p { font-size: 13px; color: var(--iv80); }
+.wr-change--off { border-color: var(--iv30); background: var(--iv08); }
+.wc-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.wc { padding: 5px 10px; border-radius: 999px; font: 700 11px/1 var(--sans); letter-spacing: .04em; }
+.wc--new { background: var(--champ); color: var(--ink); }
+.wc--up { border: 1px solid var(--champ); color: var(--champ); }
+.wc--job { background: rgba(226,86,111,.18); color: #f3a3b1; }
+.wc--off { border: 1px solid var(--iv30); color: var(--iv60); }
+.wr-sides li, .wr-people li { border-radius: 10px; transition: background .6s; }
+.wr-sides li.is-new, .wr-people li.is-new { background: rgba(197,166,118,.13); box-shadow: inset 3px 0 0 var(--champ); padding-left: 8px; padding-right: 8px; }
+.wr-sides li.is-up { background: rgba(197,166,118,.06); box-shadow: inset 3px 0 0 rgba(197,166,118,.55); padding-left: 8px; padding-right: 8px; }
+.wr-tag { display: inline-block; margin-left: 8px; padding: 3px 7px; border-radius: 999px; font: 700 9px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; vertical-align: 2px; }
+.wr-tag--new { background: var(--champ); color: var(--ink); }
+.wr-tag--up { border: 1px solid var(--champ); color: var(--champ); }
+.chip.is-new { box-shadow: 0 0 0 2px var(--champ); }
+@media (prefers-reduced-motion: no-preference) {
+  .wr-change { animation: wcin .5s var(--ease); }
+  .wr-sides li.is-new, .wr-people li.is-new, .chip.is-new { animation: glow 2.2s var(--ease); }
+  .wr-sides li.is-up { animation: glowsoft 1.6s var(--ease); }
+  @keyframes wcin { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes glow { 0% { box-shadow: inset 3px 0 0 var(--champ), 0 0 0 0 rgba(197,166,118,.75); background: rgba(197,166,118,.35); } 60% { box-shadow: inset 3px 0 0 var(--champ), 0 0 22px 2px rgba(197,166,118,.35); } 100% { box-shadow: inset 3px 0 0 var(--champ), 0 0 0 0 rgba(197,166,118,0); } }
+  @keyframes glowsoft { 0% { background: rgba(197,166,118,.25); } 100% { background: rgba(197,166,118,.06); } }
+}
 @media (max-width: 960px) { .wiz { grid-template-columns: 1fr; } .wiz__r { position: static; } }
 
 /* ---------- Demande et membres ---------- */

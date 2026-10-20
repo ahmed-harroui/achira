@@ -717,7 +717,7 @@
       '<fieldset class="wq"><legend><span class="num">01</span> Dans quel secteur ?</legend><select data-ch="wsec" aria-label="Secteur"><option value="">Choisir un secteur</option>' + SECTEURS.map(function (s) { return '<option' + (WA.secteur === s ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></fieldset>' +
       QUESTIONS.map(function (q, i) {
         return '<fieldset class="wq"><legend><span class="num">' + pad(i + 2) + '</span> ' + esc(q.t) + (q.multi ? ' <span class="small">plusieurs choix possibles</span>' : '') + '</legend><div class="chips">' +
-          q.o.map(function (o) { return '<button type="button" class="chip" data-act="wopt" data-q="' + q.k + '" data-v="' + o[0] + '" aria-pressed="' + (WA[q.k].indexOf(o[0]) > -1) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div></fieldset>';
+          q.o.map(function (o) { var pv = optPreview(o[2]); return '<button type="button" class="chip" data-act="wopt" data-q="' + q.k + '" data-v="' + o[0] + '" aria-pressed="' + (WA[q.k].indexOf(o[0]) > -1) + '"' + (pv ? ' title="Touche : ' + esc(pv) + '"' : '') + '>' + esc(o[1]) + '</button>'; }).join('') + '</div></fieldset>';
       }).join('') +
       '<form class="wq form" id="wizf" novalidate><legend class="full"><span class="num">' + pad(QUESTIONS.length + 2) + '</span> Présente ton projet</legend>' +
       '<div class="field full"><label for="w-title">Nom du projet</label><input type="text" id="w-title" required></div>' +
@@ -728,23 +728,71 @@
     $('#wizf').addEventListener('submit', submitWiz);
   }
   function wizResult() { return analyze(WA, SECTOR_EXTRA[WA.secteur]); }
-  function renderWizR() {
-    var r = wizResult(), top = r.list.slice(0, 8);
-    if (!r.list.length) { $('#wizr').innerHTML = '<p class="eyebrow">Ton projet</p><h2 class="h3">Réponds à une question pour commencer.</h2><p class="small">Les sides touchés, les métiers et les personnes du cercle apparaîtront ici.</p>'; return; }
-    $('#wizr').innerHTML = '<p class="eyebrow">Ton projet touche</p><h2 class="h2" style="font-size:48px"><span class="tab">' + r.list.length + '</span> sides</h2>' +
-      '<ol class="wr-sides">' + top.map(function (x) { return '<li><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b><span>' + esc(x.reasons.join(' · ')) + '</span></div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>'; }).join('') + '</ol>' +
-      (r.list.length > top.length ? '<p class="small">+ ' + (r.list.length - top.length) + ' side(s) utile(s)</p>' : '') +
+  /* Ce que chaque choix change dans « Ton projet touche » : on compare au résultat précédent */
+  var WPREV = { sides: {}, levels: {}, people: {}, jobs: {} };
+  function optPreview(map) { return Object.keys(map || {}).map(function (k) { var d = dom(k); return d ? pad(d.n) + ' ' + d.t : ''; }).filter(Boolean).join(' · '); }
+  function renderWizR(change) {
+    var r = wizResult(), box = $('#wizr');
+    var prev = WPREV, cur = { sides: {}, levels: {}, people: {}, jobs: {} };
+    r.list.forEach(function (x) { cur.sides[x.d.id] = x.score; cur.levels[x.d.id] = x.level; });
+    r.members.slice(0, 6).forEach(function (x) { cur.people[x.m.id] = 1; });
+    r.missing.forEach(function (y) { cur.jobs[y.job] = 1; });
+    var added = r.list.filter(function (x) { return !(x.d.id in prev.sides); }),
+      raised = r.list.filter(function (x) { return (x.d.id in prev.sides) && x.score > prev.sides[x.d.id]; }),
+      removed = Object.keys(prev.sides).filter(function (k) { return !(k in cur.sides); }).map(dom).filter(Boolean),
+      lowered = r.list.filter(function (x) { return (x.d.id in prev.sides) && x.score < prev.sides[x.d.id]; }),
+      newPeople = r.members.slice(0, 6).filter(function (x) { return !prev.people[x.m.id]; }),
+      newJobs = r.missing.filter(function (y) { return !prev.jobs[y.job]; });
+    WPREV = cur;
+    if (!r.list.length) {
+      box.innerHTML = (change && removed.length ? '<div class="wr-change wr-change--off"><b>« ' + esc(change.label) + ' »</b> retiré : ' + removed.length + ' side(s) en moins.</div>' : '') +
+        '<p class="eyebrow">Ton projet</p><h2 class="h3">Réponds à une question pour commencer.</h2><p class="small">Les sides touchés, les métiers et les personnes du cercle apparaîtront ici.</p>';
+      return;
+    }
+    var banner = '';
+    if (change) {
+      var parts = [];
+      if (added.length) parts.push('<span class="wc wc--new">+' + added.length + ' side' + (added.length > 1 ? 's' : '') + '</span>');
+      if (raised.length) parts.push('<span class="wc wc--up">' + raised.length + ' renforcé' + (raised.length > 1 ? 's' : '') + '</span>');
+      if (newPeople.length) parts.push('<span class="wc wc--new">+' + newPeople.length + ' personne' + (newPeople.length > 1 ? 's' : '') + '</span>');
+      if (newJobs.length) parts.push('<span class="wc wc--job">+' + newJobs.length + ' métier' + (newJobs.length > 1 ? 's' : '') + ' à trouver</span>');
+      if (removed.length) parts.push('<span class="wc wc--off">−' + removed.length + ' side' + (removed.length > 1 ? 's' : '') + '</span>');
+      if (lowered.length) parts.push('<span class="wc wc--off">' + lowered.length + ' allégé' + (lowered.length > 1 ? 's' : '') + '</span>');
+      banner = '<div class="wr-change' + (change.on ? '' : ' wr-change--off') + '" role="status"><p><b>« ' + esc(change.label) + ' »</b> ' + (change.on ? 'ajoute' : 'retiré') + ' :</p><div class="wc-row">' + (parts.length ? parts.join('') : '<span class="small">rien de nouveau, ces sides étaient déjà touchés</span>') + '</div></div>';
+    }
+    box.innerHTML = banner +
+      '<p class="eyebrow">Ton projet touche</p><h2 class="h2" style="font-size:48px"><span class="tab">' + r.list.length + '</span> side' + (r.list.length > 1 ? 's' : '') + '</h2>' +
+      '<ol class="wr-sides">' + r.list.map(function (x) {
+        var isNew = change && added.indexOf(x) > -1, isUp = change && raised.indexOf(x) > -1, lvlUp = isUp && prev.levels[x.d.id] !== x.level;
+        var tag = isNew ? '<span class="wr-tag wr-tag--new">Nouveau</span>' : isUp ? '<span class="wr-tag wr-tag--up">+' + (x.score - prev.sides[x.d.id]) + (lvlUp ? ' · ' + x.level : '') + '</span>' : '';
+        return '<li class="' + (isNew ? 'is-new' : isUp ? 'is-up' : '') + '"><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b>' + tag + '<span>' + esc(x.reasons.join(' · ')) + '</span></div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>';
+      }).join('') + '</ol>' +
       '<p class="lbl" style="margin-top:8px">Les personnes du cercle</p>' +
-      (r.members.length ? '<ul class="wr-people">' + r.members.slice(0, 5).map(function (x) { return '<li>' + avatar(x.m) + '<div><b>' + esc(x.m.name) + '</b><span>' + esc(x.m.metier) + ' · ' + esc(x.m.type) + '</span><span class="wr-ds">' + x.ds.map(function (id) { return pad(dom(id).n); }).join(' · ') + '</span></div></li>'; }).join('') + '</ul>' : '<p class="small">Personne dans le cercle pour ces sides pour l’instant.</p>') +
-      (r.missing.length ? '<p class="lbl" style="margin-top:8px">Métiers à trouver</p><div class="chips">' + r.missing.slice(0, 8).map(function (y) { return '<span class="chip chip--open" title="Side ' + pad(y.d.n) + '">' + esc(y.job) + '</span>'; }).join('') + '</div>' : '');
+      (r.members.length ? '<ul class="wr-people">' + r.members.slice(0, 6).map(function (x) {
+        var isNew = change && newPeople.indexOf(x) > -1;
+        return '<li class="' + (isNew ? 'is-new' : '') + '">' + avatar(x.m) + '<div><b>' + esc(x.m.name) + (isNew ? ' <span class="wr-tag wr-tag--new">Nouveau</span>' : '') + '</b><span>' + esc(x.m.metier) + ' · ' + esc(x.m.type) + '</span><span class="wr-ds">' + x.ds.map(function (id) { return pad(dom(id).n); }).join(' · ') + '</span></div></li>';
+      }).join('') + '</ul>' : '<p class="small">Personne dans le cercle pour ces sides pour l’instant.</p>') +
+      (r.missing.length ? '<p class="lbl" style="margin-top:8px">Métiers à trouver</p><div class="chips">' + r.missing.slice(0, 10).map(function (y) {
+        return '<span class="chip chip--open' + (change && newJobs.indexOf(y) > -1 ? ' is-new' : '') + '" title="Side ' + pad(y.d.n) + '">' + esc(y.job) + '</span>';
+      }).join('') + '</div>' : '');
+    // sur mobile le panneau est sous les questions : un message résume le changement
+    if (change && window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
+      var bits = [];
+      if (added.length) bits.push('+' + added.length + ' side' + (added.length > 1 ? 's' : ''));
+      if (raised.length) bits.push(raised.length + ' renforcé' + (raised.length > 1 ? 's' : ''));
+      if (newPeople.length) bits.push('+' + newPeople.length + ' personne' + (newPeople.length > 1 ? 's' : ''));
+      if (removed.length) bits.push('−' + removed.length + ' side' + (removed.length > 1 ? 's' : ''));
+      toast((change.on ? '' : 'Retiré · ') + (bits.length ? bits.join(' · ') : 'Rien de nouveau') + ' · ' + r.list.length + ' sides au total');
+    }
   }
   ACT.wopt = function (b) {
     var q = QUESTIONS.find(function (x) { return x.k === b.dataset.q; }), v = b.dataset.v, cur = WA[q.k], i = cur.indexOf(v);
+    var o = q.o.find(function (x) { return x[0] === v; });
     if (q.multi) { if (i > -1) cur.splice(i, 1); else cur.push(v); } else WA[q.k] = i > -1 ? [] : [v];
     $$('[data-act=wopt][data-q="' + q.k + '"]').forEach(function (x) { x.setAttribute('aria-pressed', WA[q.k].indexOf(x.dataset.v) > -1); });
-    updateProg(); renderWizR();
+    updateProg(); renderWizR({ label: o[1], on: i < 0 });
   };
-  CH.wsec = function (el) { WA.secteur = el.value; updateProg(); renderWizR(); };
+  CH.wsec = function (el) { WA.secteur = el.value; updateProg(); renderWizR({ label: el.value || 'Secteur', on: !!el.value }); };
   function updateProg() { var t = QUESTIONS.length + 1; $('.wiz__prog span').style.width = Math.round(answered() / t * 100) + '%'; $('.wiz__prog + p').textContent = answered() + ' / ' + t + ' questions'; }
   function submitWiz(e) {
     e.preventDefault();
