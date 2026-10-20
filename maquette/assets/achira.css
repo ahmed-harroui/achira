@@ -428,6 +428,8 @@ a.chip:hover { border-color: var(--ivory); }
 .wr-tag--up { border: 1px solid var(--champ); color: var(--champ); }
 .chip.is-new { box-shadow: 0 0 0 2px var(--champ); }
 .wr-sides li div > .wr-tag, .wr-people li div .wr-tag { justify-self: start; margin-left: 0; margin-top: 2px; }
+.wr-sides li .wr-tag--new, .wr-people li .wr-tag--new { color: var(--ink); font-size: 10px; }
+.wr-sides li .wr-tag--up { color: var(--champ); font-size: 10px; }
 @media (prefers-reduced-motion: no-preference) {
   .wr-change { animation: wcin .5s var(--ease); }
   .wr-sides li.is-new, .wr-people li.is-new, .chip.is-new { animation: glow 2.2s var(--ease); }
