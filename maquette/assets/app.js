@@ -150,6 +150,7 @@
     return sides;
   }
   var DB = load();
+  DB.messages = DB.messages || [];
   function save() {
     if (ONLINE) { if (PAGE.indexOf('admin-') === 0) scheduleSync(); return; }
     try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {}
@@ -214,7 +215,9 @@
     applyContent(res[2].data);
   }
   async function loadAdmin() {
-    var res = await Promise.all([SB.from('projects').select('*').order('created_at'), SB.from('members').select('*').order('id'), SB.from('submissions').select('*').order('created_at', { ascending: false }), SB.from('site_content').select('key,value')]);
+    var res = await Promise.all([SB.from('projects').select('*').order('created_at'), SB.from('members').select('*').order('id'), SB.from('submissions').select('*').order('created_at', { ascending: false }), SB.from('site_content').select('key,value'), SB.from('messages').select('*').order('created_at', { ascending: false }).limit(300)]);
+    DB.messages = res[4] && !res[4].error ? res[4].data : [];
+    res = res.slice(0, 4);
     var err = res.find(function (r) { return r.error; });
     if (err) throw new Error(err.error.message);
     if (!res[0].data.length) throw new Error('Ce compte n’a pas les droits d’administration.');
@@ -297,7 +300,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -434,7 +437,8 @@
         '<p class="eyebrow">Métier</p><h3 class="h3">' + esc(j) + '</h3>' + (open2 ? '<p><span class="chip chip--open">Recherché sur ce projet</span></p>' : '') +
         '<p class="lbl">Modes d’exercice</p><div class="chips">' + DB.pros.map(function (x) { return '<span class="chip">' + x + '</span>'; }).join('') + '</div>' +
         '<p class="lbl">Intervient sur</p><div class="chips">' + others.map(function (x) { return '<button type="button" class="chip' + (x === EX.d ? ' chip--on' : '') + '" data-act="exd" data-d="' + x.id + '" data-keep="1">' + pad(x.n) + ' ' + esc(x.t) + '</button>'; }).join('') + '</div>' +
-        '<p class="lbl">Membres du cercle</p>' + (ms.length ? '<ul class="wr-people">' + ms.map(function (m) { return '<li>' + avatar(m) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.type) + (m.city ? ' · ' + esc(m.city) : '') + '</span></div></li>'; }).join('') + '</ul>' : '<p class="small">Personne dans le cercle pour l’instant.</p>') +
+        '<p class="lbl">Membres du cercle</p>' + (ms.length ? '<ul class="wr-people">' + ms.map(function (m) { return '<li>' + avatar(m) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.type) + (m.city ? ' · ' + esc(m.city) : '') + '</span></div></li>'; }).join('') + '</ul>'
+          : '<div class="ex__none"><p class="small">Personne dans le cercle n’exerce ce métier pour l’instant.</p>' + alertBtn(EX.d, [j], P ? 'Projet « ' + P.title + ' ».' : 'Repéré dans l’arbre des métiers.', IS_ADMIN ? 'Alerte recrutement' : 'Prévenir l’équipe') + '</div>') +
         '<div class="row">' + (IS_ADMIN ? '<a class="btn btn--line btn--sm" href="membres.html">Gérer les membres</a>' : '<a class="btn btn--bord btn--sm" href="' + base + 'rejoindre.html#' + (P ? P.slug + '.' : '.') + EX.d.id + '.' + slug(j) + '">Proposer mon aide</a><a class="btn btn--line btn--sm" href="' + base + 'membres.html#job-' + slug(j) + '">Voir les membres</a>') + '</div></div>';
     }
     if (!col2) col2 = '<div class="ex__col ex__col--2 ex__empty"><p class="small">Choisis un side pour voir ses métiers, ses missions et ses compétences.</p></div>';
@@ -579,9 +583,23 @@
       '<a class="contact contact--main" href="' + esc(discordUrl()) + '" target="_blank" rel="noopener"><span class="eyebrow">Discuter</span><h3 class="h3">Discord ACHIRA</h3><p>Le lieu de rendez-vous du cercle : questions, idées, coulisses. Les membres y répondent.</p><span class="contact__go">Rejoindre le serveur <span aria-hidden="true">↗</span></span></a>' +
       '<a class="contact" href="rejoindre.html"><span class="eyebrow">Proposer</span><h3 class="h3">Rejoindre le cercle</h3><p>Propose ton savoir-faire sur un side ou un projet entier.</p><span class="contact__go">Ouvrir le formulaire <span aria-hidden="true">→</span></span></a>' +
       '<div class="contact"><span class="eyebrow">Suivre</span><h3 class="h3">Instagram ACHIRA</h3><p>Le compte AKARBI montre la marque. Le compte ACHIRA montre le chemin.</p><span class="contact__go" style="color:var(--iv60)">' + (DB.settings.instagram ? esc(DB.settings.instagram) : 'Bientôt') + '</span></div>' +
-      '</div><p class="foot__motto" style="text-align:center">' + esc(C.motto) + '</p></div></section>'
+      '</div><form class="ask" id="askf" novalidate><div><p class="eyebrow">Écrire à l’équipe</p><h3 class="h3">Une question, une idée ?</h3><p class="small">Ton message arrive directement dans la messagerie de l’équipe ACHIRA.</p></div>' +
+      '<div class="ask__fields"><textarea id="ask-msg" placeholder="Ton message…" aria-label="Ton message" required></textarea><div class="row"><input type="text" id="ask-name" placeholder="Ton nom (facultatif)" aria-label="Ton nom" autocomplete="name"><input type="email" id="ask-email" placeholder="Ton e-mail pour la réponse (facultatif)" aria-label="Ton e-mail" autocomplete="email"></div>' +
+      '<p class="small" id="ask-err" role="alert"></p><div><button class="btn btn--bord" type="submit">Envoyer</button></div></div></form>' +
+      '<p class="foot__motto" style="text-align:center">' + esc(C.motto) + '</p></div></section>'
     );
   }
+
+  document.addEventListener('submit', function (e) {
+    if (e.target.id !== 'askf') return;
+    e.preventDefault();
+    var msg = $('#ask-msg').value.trim(), name = $('#ask-name').value.trim(), mail = $('#ask-email').value.trim(), b = e.target.querySelector('button[type=submit]');
+    if (!msg) { $('#ask-err').textContent = 'Écris ton message avant de l’envoyer.'; return; }
+    b.disabled = true; b.textContent = 'Envoi…';
+    sendMessage({ type: 'question', title: msg.slice(0, 90) + (msg.length > 90 ? '…' : ''), body: msg + (mail ? '\n\nRépondre à : ' + mail : ''), author: name || 'Visiteur' }).then(function () {
+      e.target.querySelector('.ask__fields').innerHTML = '<div class="notice"><b>Merci' + (name ? ' ' + esc(name) : '') + '.</b> Ton message est arrivé à l’équipe' + (mail ? ', elle te répond par e-mail.' : '.') + '</div>';
+    }, function () { b.disabled = false; b.textContent = 'Envoyer'; $('#ask-err').textContent = 'L’envoi n’a pas abouti. Réessaie ou écris-nous sur Discord.'; });
+  });
 
   /* ----- Sides (le modèle) ----- */
   function pSides() {
@@ -819,13 +837,19 @@
       if (lowered.length) parts.push('<span class="wc wc--off">' + lowered.length + ' allégé' + (lowered.length > 1 ? 's' : '') + '</span>');
       banner = '<div class="wr-change' + (change.on ? '' : ' wr-change--off') + '" role="status"><p><b>« ' + esc(change.label) + ' »</b> ' + (change.on ? 'ajoute' : 'retiré') + ' :</p><div class="wc-row">' + (parts.length ? parts.join('') : '<span class="small">rien de nouveau, ces sides étaient déjà touchés</span>') + '</div></div>';
     }
+    // ACHIRA ne propose que les sides qu'un membre du cercle peut porter ; les autres sont signalés à part
+    var covered = r.list.filter(function (x) { return domainCovered(x.d); }), uncovered = r.list.filter(function (x) { return !domainCovered(x.d); });
+    var ctx = 'Un porteur de projet' + (WA.secteur ? ' (secteur ' + WA.secteur + ')' : '') + ' en a besoin.';
+    function item(x, dim) {
+      var isNew = change && added.indexOf(x) > -1, isUp = change && raised.indexOf(x) > -1, lvlUp = isUp && prev.levels[x.d.id] !== x.level;
+      var tag = isNew ? '<span class="wr-tag wr-tag--new">Nouveau</span>' : isUp ? '<span class="wr-tag wr-tag--up">+' + (x.score - prev.sides[x.d.id]) + (lvlUp ? ' · ' + x.level : '') + '</span>' : '';
+      return '<li class="' + (dim ? 'is-dim ' : '') + (isNew ? 'is-new' : isUp ? 'is-up' : '') + '"><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b>' + tag + '<span>' + esc(dim ? 'Personne dans le cercle pour l’instant · ' + x.d.metiers.slice(0, 3).join(', ') : x.reasons.join(' · ')) + '</span>' +
+        (dim ? '<span class="wr-alert">' + alertBtn(x.d, null, ctx) + '</span>' : '') + '</div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>';
+    }
     box.innerHTML = banner +
-      '<p class="eyebrow">Ton projet touche</p><h2 class="h2" style="font-size:48px"><span class="tab">' + r.list.length + '</span> side' + (r.list.length > 1 ? 's' : '') + '</h2>' +
-      '<ol class="wr-sides">' + r.list.map(function (x) {
-        var isNew = change && added.indexOf(x) > -1, isUp = change && raised.indexOf(x) > -1, lvlUp = isUp && prev.levels[x.d.id] !== x.level;
-        var tag = isNew ? '<span class="wr-tag wr-tag--new">Nouveau</span>' : isUp ? '<span class="wr-tag wr-tag--up">+' + (x.score - prev.sides[x.d.id]) + (lvlUp ? ' · ' + x.level : '') + '</span>' : '';
-        return '<li class="' + (isNew ? 'is-new' : isUp ? 'is-up' : '') + '"><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b>' + tag + '<span>' + esc(x.reasons.join(' · ')) + '</span></div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>';
-      }).join('') + '</ol>' +
+      '<p class="eyebrow">Le cercle peut couvrir</p><h2 class="h2" style="font-size:48px"><span class="tab">' + covered.length + '</span> side' + (covered.length > 1 ? 's' : '') + '</h2>' +
+      (covered.length ? '<ol class="wr-sides">' + covered.map(function (x) { return item(x, false); }).join('') + '</ol>' : '<p class="small">Aucun membre du cercle ne couvre encore ces sides.</p>') +
+      (uncovered.length ? '<p class="lbl" style="margin-top:8px">Sans membre dans le cercle · ' + uncovered.length + '</p><p class="small">Ton projet en a besoin, mais personne ne les porte encore. Préviens l’équipe : elle cherchera la bonne personne.</p><ol class="wr-sides">' + uncovered.map(function (x) { return item(x, true); }).join('') + '</ol>' : '') +
       '<p class="lbl" style="margin-top:8px">Les personnes du cercle</p>' +
       (r.members.length ? '<ul class="wr-people">' + r.members.slice(0, 6).map(function (x) {
         var isNew = change && newPeople.indexOf(x) > -1;
@@ -923,6 +947,88 @@
   }
 
   /* ================= DASHBOARD ================= */
+  /* ================= MESSAGES DE L'ÉQUIPE ================= */
+  var MSGT = { recrutement: 'Recrutement', projet: 'Projet déposé', candidature: 'Candidature', question: 'Question', note: 'Note d’équipe' };
+  var MSENT = {};
+  function domainCovered(d) { return DB.members.some(function (m) { return memberDomainsIn(DB, m).indexOf(d.id) > -1; }); }
+  function sendMessage(m) {
+    m = { type: m.type, title: String(m.title).slice(0, 200), body: m.body ? String(m.body).slice(0, 3000) : null, payload: m.payload || {}, author: m.author ? String(m.author).slice(0, 200) : null };
+    if (ONLINE) return SB.from('messages').insert(m).then(function (r) {
+      if (r.error) throw new Error(r.error.message);
+      if (IS_ADMIN) return SB.from('messages').select('*').order('created_at', { ascending: false }).limit(300).then(function (x) { if (!x.error) DB.messages = x.data; });
+    });
+    DB.messages.unshift(Object.assign({ id: Date.now(), status: 'new', created_at: new Date().toISOString() }, m)); save();
+    return Promise.resolve();
+  }
+  function recruitMessage(d, jobs, context) {
+    return { type: 'recrutement', title: 'Trouver un membre pour le side ' + pad(d.n) + ' · ' + d.t,
+      body: (context ? context + ' ' : '') + 'Aucun membre du cercle ne couvre ce side aujourd’hui. Métiers possibles : ' + (jobs || d.metiers).join(', ') + '.',
+      payload: { domain: d.id, jobs: jobs || d.metiers } };
+  }
+  // bouton « Prévenir l'équipe » (public) ou « Alerte recrutement » (dashboard), réutilisé partout
+  function alertBtn(d, jobs, ctx, label) {
+    var key = d.id + '|' + (jobs || []).join(',') + '|' + (ctx || '');
+    if (MSENT[key]) return '<span class="alert-sent">✓ Équipe prévenue</span>';
+    return '<button type="button" class="btn btn--line btn--sm alert-btn" data-act="alert" data-d="' + d.id + '" data-v="' + esc((jobs || []).join('|')) + '" data-k="' + esc(ctx || '') + '">' + (label || 'Prévenir l’équipe') + '</button>';
+  }
+  ACT.alert = function (b) {
+    var d = dom(b.dataset.d), jobs = b.dataset.v ? b.dataset.v.split('|') : null, ctx = b.dataset.k || '';
+    var key = d.id + '|' + (jobs || []).join(',') + '|' + ctx;
+    b.disabled = true; b.textContent = 'Envoi…';
+    sendMessage(recruitMessage(d, jobs, ctx)).then(function () {
+      MSENT[key] = 1; b.outerHTML = '<span class="alert-sent">✓ Équipe prévenue</span>';
+      toast('L’équipe ACHIRA est prévenue'); if (IS_ADMIN) renderMsgBtn();
+    }, function () { b.disabled = false; b.textContent = 'Réessayer'; toast('L’envoi n’a pas abouti'); });
+  };
+
+  // Onglet Messages (dashboard, en haut à droite)
+  var MT = 'tous';
+  function newMsgs() { return DB.messages.filter(function (m) { return m.status === 'new'; }).length; }
+  function msgButton() { return '<button type="button" class="msg-btn" id="msgbtn" data-act="msgopen" aria-label="Messages">' + MAIL_ICON + '<span>Messages</span>' + (newMsgs() ? '<b class="badge">' + newMsgs() + '</b>' : '') + '</button><div class="sheet-bg" id="msgbg" data-act="msgclose"></div><aside class="sheet msg-panel" id="msgpanel" aria-hidden="true" role="dialog" aria-label="Messages"></aside>'; }
+  function renderMsgBtn() { var b = $('#msgbtn'); if (b) b.outerHTML = msgButton().split('<div class="sheet-bg"')[0]; var p = $('#msgpanel'); if (p && p.classList.contains('on')) renderMsgs(); }
+  function ago(iso) { var s = (Date.now() - new Date(iso).getTime()) / 1000; return s < 60 ? 'à l’instant' : s < 3600 ? 'il y a ' + Math.round(s / 60) + ' min' : s < 86400 ? 'il y a ' + Math.round(s / 3600) + ' h' : new Date(iso).toLocaleDateString('fr-FR'); }
+  function msgLink(m) {
+    var p = m.payload || {};
+    if (m.type === 'projet' && p.slug) return '<a class="link" href="projet.html#' + esc(p.slug) + '">Voir le projet <span>→</span></a>';
+    if (m.type === 'candidature') return '<a class="link" href="candidatures.html">Voir la candidature <span>→</span></a>';
+    if (m.type === 'recrutement' && p.domain) return '<a class="link" href="membres.html">Ajouter un membre <span>→</span></a><a class="link" href="demande.html">Demande <span>→</span></a>';
+    return '';
+  }
+  function renderMsgs() {
+    var l = DB.messages.filter(function (m) { return MT === 'tous' || (MT === 'nonlus' ? m.status === 'new' : m.type === MT); });
+    var cnt = function (t) { return DB.messages.filter(function (m) { return m.type === t; }).length; };
+    $('#msgpanel').innerHTML = '<button class="sheet__close" data-act="msgclose" aria-label="Fermer">×</button>' +
+      '<div class="panel__h"><div><p class="eyebrow">Équipe ACHIRA</p><h2 class="h2" style="font-size:44px">Messages</h2></div><div class="row"><button class="btn btn--line btn--sm" data-act="msgreload">Actualiser</button>' + (newMsgs() ? '<button class="btn btn--line btn--sm" data-act="msgallread">Tout marquer lu</button>' : '') + '</div></div>' +
+      '<form class="msg-compose" id="msgform" novalidate><select id="mc-type" aria-label="Type de message"><option value="note">Note d’équipe</option><option value="recrutement">Recrutement</option></select>' +
+      '<input type="text" id="mc-title" placeholder="Objet du message" aria-label="Objet"><textarea id="mc-body" placeholder="Écris un message à l’équipe…" aria-label="Message"></textarea><button class="btn btn--bord btn--sm" type="submit">Envoyer à l’équipe</button></form>' +
+      '<div class="chips" role="group" aria-label="Filtrer">' + [['tous', 'Tous (' + DB.messages.length + ')'], ['nonlus', 'Non lus (' + newMsgs() + ')']].concat(Object.keys(MSGT).map(function (t) { return [t, MSGT[t] + ' (' + cnt(t) + ')']; })).map(function (x) { return '<button type="button" class="chip" data-act="msgtab" data-v="' + x[0] + '" aria-pressed="' + (MT === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<ul class="msg-list">' + (l.length ? l.map(function (m) {
+        return '<li class="msg msg--' + m.type + (m.status === 'new' ? ' is-new' : '') + (m.status === 'done' ? ' is-done' : '') + '"><div class="msg__top"><span class="msg__type">' + MSGT[m.type] + '</span><span class="small">' + ago(m.created_at) + (m.author ? ' · ' + esc(m.author) : '') + '</span></div>' +
+          '<b>' + esc(m.title) + '</b>' + (m.body ? '<p>' + esc(m.body) + '</p>' : '') +
+          '<div class="msg__act">' + msgLink(m) + '<span class="grow"></span>' +
+          (m.status === 'new' ? '<button class="btn btn--line btn--sm" data-act="msgstatus" data-id="' + m.id + '" data-v="read">Marquer lu</button>' : '') +
+          (m.status !== 'done' ? '<button class="btn btn--line btn--sm" data-act="msgstatus" data-id="' + m.id + '" data-v="done">Traité ✓</button>' : '<button class="btn btn--line btn--sm" data-act="msgstatus" data-id="' + m.id + '" data-v="read">Rouvrir</button>') + '</div></li>';
+      }).join('') : '<li class="small">Aucun message ici.</li>') + '</ul>';
+    $('#msgform').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var t = $('#mc-title').value.trim(), body = $('#mc-body').value.trim();
+      if (!t && !body) return;
+      sendMessage({ type: $('#mc-type').value, title: t || body.slice(0, 80), body: t ? body : null, author: 'Équipe ACHIRA' }).then(function () { MT = 'tous'; renderMsgs(); renderMsgBtn(); toast('Message envoyé à l’équipe'); }, function (er) { toast('Échec : ' + er.message); });
+    });
+  }
+  async function setMsgStatus(ids, status) {
+    DB.messages.forEach(function (m) { if (ids.indexOf(m.id) > -1) m.status = status; });
+    if (ONLINE) { var r = await SB.from('messages').update({ status: status }).in('id', ids); if (r.error) toast('Échec : ' + r.error.message); } else save();
+    renderMsgs(); renderMsgBtn();
+  }
+  ACT.msgopen = function () { var p = $('#msgpanel'); renderMsgs(); p.classList.add('on'); p.setAttribute('aria-hidden', 'false'); $('#msgbg').classList.add('on'); };
+  ACT.msgclose = function () { var p = $('#msgpanel'); p.classList.remove('on'); p.setAttribute('aria-hidden', 'true'); $('#msgbg').classList.remove('on'); };
+  ACT.msgtab = function (b) { MT = b.dataset.v; renderMsgs(); };
+  ACT.msgstatus = function (b) { setMsgStatus([+b.dataset.id], b.dataset.v); };
+  ACT.msgallread = function () { setMsgStatus(DB.messages.filter(function (m) { return m.status === 'new'; }).map(function (m) { return m.id; }), 'read'); };
+  ACT.msgreload = async function () { if (!ONLINE) return; var x = await SB.from('messages').select('*').order('created_at', { ascending: false }).limit(300); if (!x.error) { DB.messages = x.data; renderMsgs(); renderMsgBtn(); toast('Messages à jour'); } };
+  var MAIL_ICON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+
   var ADM = [['Pilotage'], ['index.html', 'Tableau de bord', 'admin-dash'], ['demande.html', 'Demande et membres', 'admin-demande'], ['Contenu'], ['projets.html', 'Projets', 'admin-projets'], ['modele.html', 'Modèle des sides', 'admin-modele'], ['contenus.html', 'Textes du site', 'admin-contenus'], ['membres.html', 'Membres', 'admin-membres'], ['Cercle'], ['candidatures.html', 'Candidatures', 'admin-candidatures'], ['reglages.html', 'Réglages', 'admin-reglages']];
   function newSubs() { return DB.subs.filter(function (s) { return s.status === 'new'; }).length; }
   function admin(eb, title, actions, body) {
@@ -936,7 +1042,7 @@
       }).join('') + '<a href="../index.html"><span>Voir le site ↗</span></a></nav>' +
       '<div class="adm-foot"><div class="adm-user"><span class="av">A</span><div>' + esc(ADMIN_EMAIL && ADMIN_EMAIL !== (CFG && CFG.teamEmail) ? ADMIN_EMAIL : 'Équipe ACHIRA') + '<span>Admin</span></div></div>' +
       (ONLINE ? '<p class="small" style="font-size:11px;color:var(--s-ok)">Connecté à la base · enregistrement automatique</p><button class="btn btn--line btn--sm" data-act="logout">Se déconnecter</button>' : '<p class="small" style="font-size:11px;color:var(--champ)">Maquette · modifications gardées dans ce navigateur</p>') + '</div></aside>' +
-      '<main class="adm-main" id="view"><div class="adm-top"><div><p class="eyebrow">' + eb + '</p><h1 class="h1">' + title + '</h1></div><div class="row">' + (actions || '') + '</div></div>' + body + '</main></div>';
+      '<main class="adm-main" id="view"><div class="adm-top"><div><p class="eyebrow">' + eb + '</p><h1 class="h1">' + title + '</h1></div><div class="row">' + (actions || '') + '</div></div>' + body + '</main></div>' + msgButton();
   }
 
   /* ----- Tableau de bord ----- */
@@ -1086,8 +1192,8 @@
       '<div class="tbl"><table><thead><tr><th>Side</th><th>Niveau</th><th>État</th><th>Personnes du cercle</th><th>Métiers à trouver</th></tr></thead><tbody>' +
       r.list.slice(0, 12).map(function (x) {
         var s = sideOf(p, x.d), ppl = r.members.filter(function (mm) { return mm.ds.indexOf(x.d.id) > -1; }).slice(0, 3), miss = r.missing.filter(function (y) { return y.d.id === x.d.id; });
-        return '<tr><td><b><span class="num" style="font-size:15px">' + pad(x.d.n) + '</span> ' + esc(x.d.t) + '</b><br><span class="small">' + esc(x.reasons.join(' · ')) + '</span></td><td><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></td><td>' + st(s.s) + '</td>' +
-          '<td><div class="chips">' + (ppl.length ? ppl.map(function (mm) { var on = s.lead === mm.m.id; return '<button type="button" class="chip" data-act="assign" data-d="' + x.d.id + '" data-m="' + mm.m.id + '" aria-pressed="' + on + '" title="' + esc(mm.m.metier) + '">' + (on ? 'Confié à ' : 'Confier à ') + esc(mm.m.name) + '</button>'; }).join('') : '<span class="small">Personne pour l’instant</span>') + '</div></td>' +
+        return '<tr class="' + (ppl.length ? '' : 'is-dim') + '"><td><b><span class="num" style="font-size:15px">' + pad(x.d.n) + '</span> ' + esc(x.d.t) + '</b><br><span class="small">' + esc(x.reasons.join(' · ')) + '</span></td><td><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></td><td>' + st(s.s) + '</td>' +
+          '<td><div class="chips">' + (ppl.length ? ppl.map(function (mm) { var on = s.lead === mm.m.id; return '<button type="button" class="chip" data-act="assign" data-d="' + x.d.id + '" data-m="' + mm.m.id + '" aria-pressed="' + on + '" title="' + esc(mm.m.metier) + '">' + (on ? 'Confié à ' : 'Confier à ') + esc(mm.m.name) + '</button>'; }).join('') : '<span class="small">Personne dans le cercle</span>' + alertBtn(x.d, miss.slice(0, 3).map(function (y) { return y.job; }), 'Projet « ' + p.title + ' ».', 'Alerte recrutement')) + '</div></td>' +
           '<td><div class="chips">' + miss.slice(0, 3).map(function (y) { return '<span class="chip chip--open">' + esc(y.job) + '</span>'; }).join('') + '</div></td></tr>';
       }).join('') + '</tbody></table></div></section>';
   }

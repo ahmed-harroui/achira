@@ -449,6 +449,48 @@ a.chip:hover { border-color: var(--ivory); }
 .login__box .btn { width: 100%; }
 button:disabled { opacity: .6; cursor: wait; }
 
+/* ---------- Sides sans membre, alertes ---------- */
+.wr-sides li.is-dim, tr.is-dim td { opacity: .5; transition: opacity .25s; }
+.wr-sides li.is-dim:hover, .wr-sides li.is-dim:focus-within, tr.is-dim:hover td, tr.is-dim:focus-within td { opacity: 1; }
+.wr-alert { display: block; margin-top: 6px; }
+.alert-btn { min-height: 30px; border-color: rgba(226,86,111,.5); color: #f3a3b1; }
+.alert-btn:hover { border-color: #f3a3b1; }
+.alert-sent { display: inline-block; font: 600 11px/1 var(--sans); letter-spacing: .08em; color: var(--s-ok); padding: 6px 0; }
+.ex__none { display: grid; gap: 10px; justify-items: start; padding: 12px; border-radius: 12px; border: 1px dashed rgba(226,86,111,.4); }
+
+/* ---------- Écrire à l'équipe (accueil) ---------- */
+.ask { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(18px, 3vw, 40px); padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: var(--iv08); }
+.ask > div:first-child { display: grid; gap: 10px; align-content: start; }
+.ask__fields { display: grid; gap: 10px; min-width: 0; }
+.ask__fields .row > input { flex: 1 1 200px; }
+@media (max-width: 860px) { .ask { grid-template-columns: 1fr; } }
+
+/* ---------- Messages de l'équipe (dashboard) ---------- */
+.msg-btn { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--iv30); color: var(--ivory); font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 8px 24px rgba(0,0,0,.35); transition: border-color .25s, transform .25s var(--ease); }
+.msg-btn:hover { border-color: var(--ivory); transform: translateY(-1px); }
+.msg-btn .badge { animation: none; }
+@media (prefers-reduced-motion: no-preference) { .msg-btn .badge { animation: pulse 2s var(--ease) infinite; } @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(127,11,31,.7); } 50% { box-shadow: 0 0 0 6px rgba(127,11,31,0); } } }
+.adm-main { padding-top: 70px; }
+@media (max-width: 860px) { .msg-btn span { display: none; } .msg-btn { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } .adm-main { padding-top: 28px; } }
+.msg-panel { width: min(620px, 100%); gap: 18px; }
+.msg-compose { display: grid; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--iv14); background: rgba(14,3,6,.5); }
+.msg-compose textarea { min-height: 70px; }
+.msg-compose .btn { justify-self: start; }
+.msg-list { display: grid; gap: 10px; }
+.msg { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--iv14); background: var(--iv08); border-left: 3px solid var(--iv30); }
+.msg.is-new { background: rgba(238,229,211,.1); }
+.msg.is-new b::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 8px; border-radius: 50%; background: var(--s-open); vertical-align: 2px; }
+.msg.is-done { opacity: .55; }
+.msg p { font-size: 14px; color: var(--iv80); white-space: pre-line; }
+.msg__top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.msg__type { font: 600 10px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; }
+.msg__act { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 4px; }
+.msg--recrutement { border-left-color: var(--s-open); } .msg--recrutement .msg__type { color: #f3a3b1; }
+.msg--projet { border-left-color: var(--champ); } .msg--projet .msg__type { color: var(--champ); }
+.msg--candidature { border-left-color: var(--s-ok); } .msg--candidature .msg__type { color: var(--s-ok); }
+.msg--question { border-left-color: #9fb3d9; } .msg--question .msg__type { color: #b8c8e8; }
+.msg--note { border-left-color: var(--ivory); } .msg--note .msg__type { color: var(--ivory); }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }
