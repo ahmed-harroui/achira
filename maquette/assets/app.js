@@ -300,7 +300,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -784,7 +784,9 @@
   var SECTEURS = ['Mode et cuir', 'Artisanat & export', 'Agroalimentaire', 'Tourisme', 'Restauration', 'Santé privée', 'Beauté & bien-être', 'Formation privée', 'Sport & loisirs', 'BTP & habitat', 'Immobilier', 'Industrie B2B', 'Logistique', 'Énergie & eau', 'Automobile', 'Commerce spécialisé', 'Services professionnels', 'Autre'];
   function pDeposer() {
     shell('<section class="phero"><div class="in"><p class="eyebrow rv">Déposer un projet</p><h1 class="h1 rv">Ton projet, tous ses côtés.</h1><p class="lead rv" style="max-width:42ch">Réponds aux questions : à chaque réponse, on te montre les sides que ton projet touche, les métiers dont il a besoin et les personnes du cercle qui peuvent t’aider.</p></div></section>' +
-      '<section class="band dark band--tight"><div class="in"><div class="wiz"><div class="wiz__q" id="wizq"></div><aside class="wiz__r" id="wizr" aria-live="polite"></aside></div></div></section>');
+      '<section class="band dark band--tight"><div class="in"><div class="wiz"><div class="wiz__q" id="wizq"></div><aside class="wiz__r" id="wizr" aria-live="polite"></aside></div></div></section>' +
+      '<div class="wiz__shade" id="wizshade" data-act="wizsheet" data-v="0"></div><button type="button" class="wiz__dock" id="wizdock" data-act="wizsheet" data-v="1" aria-controls="wizr"></button>');
+    document.body.classList.add('has-dock');
     renderWizQ(); renderWizR();
   }
   function answered() { return QUESTIONS.filter(function (q) { return WA[q.k].length; }).length + (WA.secteur ? 1 : 0); }
@@ -822,8 +824,9 @@
       newJobs = r.missing.filter(function (y) { return !prev.jobs[y.job]; });
     WPREV = cur;
     if (!r.list.length) {
-      box.innerHTML = (change && removed.length ? '<div class="wr-change wr-change--off"><b>« ' + esc(change.label) + ' »</b> retiré : ' + removed.length + ' side(s) en moins.</div>' : '') +
+      box.innerHTML = SHEET_HANDLE + (change && removed.length ? '<div class="wr-change wr-change--off"><b>« ' + esc(change.label) + ' »</b> retiré : ' + removed.length + ' side(s) en moins.</div>' : '') +
         '<p class="eyebrow">Ton projet</p><h2 class="h3">Réponds à une question pour commencer.</h2><p class="small">Les sides touchés, les métiers et les personnes du cercle apparaîtront ici.</p>';
+      renderDock(null);
       return;
     }
     var banner = '';
@@ -846,7 +849,7 @@
       return '<li class="' + (dim ? 'is-dim ' : '') + (isNew ? 'is-new' : isUp ? 'is-up' : '') + '"><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b>' + tag + '<span>' + esc(dim ? 'Personne dans le cercle pour l’instant · ' + x.d.metiers.slice(0, 3).join(', ') : x.reasons.join(' · ')) + '</span>' +
         (dim ? '<span class="wr-alert">' + alertBtn(x.d, null, ctx) + '</span>' : '') + '</div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>';
     }
-    box.innerHTML = banner +
+    box.innerHTML = SHEET_HANDLE + banner +
       '<p class="eyebrow">Le cercle peut couvrir</p><h2 class="h2" style="font-size:48px"><span class="tab">' + covered.length + '</span> side' + (covered.length > 1 ? 's' : '') + '</h2>' +
       (covered.length ? '<ol class="wr-sides">' + covered.map(function (x) { return item(x, false); }).join('') + '</ol>' : '<p class="small">Aucun membre du cercle ne couvre encore ces sides.</p>') +
       (uncovered.length ? '<p class="lbl" style="margin-top:8px">Sans membre dans le cercle · ' + uncovered.length + '</p><p class="small">Ton projet en a besoin, mais personne ne les porte encore. Préviens l’équipe : elle cherchera la bonne personne.</p><ol class="wr-sides">' + uncovered.map(function (x) { return item(x, true); }).join('') + '</ol>' : '') +
@@ -858,16 +861,24 @@
       (r.missing.length ? '<p class="lbl" style="margin-top:8px">Métiers à trouver</p><div class="chips">' + r.missing.slice(0, 10).map(function (y) {
         return '<span class="chip chip--open' + (change && newJobs.indexOf(y) > -1 ? ' is-new' : '') + '" title="Side ' + pad(y.d.n) + '">' + esc(y.job) + '</span>';
       }).join('') + '</div>' : '');
-    // sur mobile le panneau est sous les questions : un message résume le changement
-    if (change && window.matchMedia && window.matchMedia('(max-width: 960px)').matches) {
-      var bits = [];
-      if (added.length) bits.push('+' + added.length + ' side' + (added.length > 1 ? 's' : ''));
-      if (raised.length) bits.push(raised.length + ' renforcé' + (raised.length > 1 ? 's' : ''));
-      if (newPeople.length) bits.push('+' + newPeople.length + ' personne' + (newPeople.length > 1 ? 's' : ''));
-      if (removed.length) bits.push('−' + removed.length + ' side' + (removed.length > 1 ? 's' : ''));
-      toast((change.on ? '' : 'Retiré · ') + (bits.length ? bits.join(' · ') : 'Rien de nouveau') + ' · ' + r.list.length + ' sides au total');
-    }
+    renderDock({ covered: covered, uncovered: uncovered, people: r.members.length, added: change ? added : [] });
   }
+  /* Mobile : barre fixe en bas qui résume le résultat pendant qu'on répond ; un appui ouvre le détail */
+  var SHEET_HANDLE = '<button type="button" class="wiz__sheet-close" data-act="wizsheet" data-v="0" aria-label="Fermer le détail"></button>';
+  function renderDock(x) {
+    var d = $('#wizdock'); if (!d) return;
+    if (!x) { d.innerHTML = '<span class="wiz__dock-n"><b>0</b><span>side</span></span><span class="wiz__dock-pills small" style="align-items:center">Réponds aux questions : tes sides apparaîtront ici.</span>'; return; }
+    var pill = function (y, dim) { return '<span class="dp dp--' + slug(y.level) + (dim ? ' dp--dim' : '') + (x.added.indexOf(y) > -1 ? ' is-new' : '') + '" title="' + esc(pad(y.d.n) + ' ' + y.d.t) + '">' + pad(y.d.n) + '</span>'; };
+    d.innerHTML = '<span class="wiz__dock-n"><b class="tab">' + x.covered.length + '</b><span>side' + (x.covered.length > 1 ? 's' : '') + ' couvert' + (x.covered.length > 1 ? 's' : '') + (x.uncovered.length ? ' · ' + x.uncovered.length + ' sans membre' : '') + '</span></span>' +
+      '<span class="wiz__dock-pills">' + x.covered.map(function (y) { return pill(y, false); }).join('') + x.uncovered.map(function (y) { return pill(y, true); }).join('') + '</span>' +
+      '<span class="wiz__dock-go">Détail ↑</span>';
+    if (x.added.length) { d.classList.remove('bump'); void d.offsetWidth; d.classList.add('bump'); }
+  }
+  ACT.wizsheet = function (b) {
+    var open = b.dataset.v === '1', r = $('#wizr'), s = $('#wizshade');
+    if (!(window.matchMedia && window.matchMedia('(max-width: 960px)').matches)) { if (open) r.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    r.classList.toggle('open', open); s.classList.toggle('on', open); document.body.style.overflow = open ? 'hidden' : '';
+  };
   ACT.wopt = function (b) {
     var q = QUESTIONS.find(function (x) { return x.k === b.dataset.q; }), v = b.dataset.v, cur = WA[q.k], i = cur.indexOf(v);
     var o = q.o.find(function (x) { return x[0] === v; });

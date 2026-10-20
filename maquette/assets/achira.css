@@ -491,6 +491,102 @@ button:disabled { opacity: .6; cursor: wait; }
 .msg--question { border-left-color: #9fb3d9; } .msg--question .msg__type { color: #b8c8e8; }
 .msg--note { border-left-color: var(--ivory); } .msg--note .msg__type { color: var(--ivory); }
 
+/* =====================================================================
+   ÉQUILIBRE DES COULEURS ET LISIBILITÉ
+   Les sections « bord » passent en beige (papier ivoire d'AKARBI, texte encre) ;
+   le bordeaux reste pour l'accueil, les accents et les boutons d'action.
+   ===================================================================== */
+:root { --sand: #e3d6bd; --ink3: #5d6b65; --paper-line: rgba(16,35,29,.14); --ok-ink: #2f6b52; }
+.bord { background: var(--paper); color: var(--ink); }
+.phero { background: radial-gradient(60% 80% at 92% 0%, rgba(127,11,31,.42), transparent 70%), radial-gradient(70% 90% at 0% 100%, rgba(23,58,48,.55), transparent 70%), #0d0a0b; }
+.hero { background: radial-gradient(70% 60% at 50% 25%, rgba(127,11,31,.55) 0%, rgba(22,4,10,.6) 55%, transparent 100%), radial-gradient(80% 60% at 50% 100%, rgba(23,58,48,.5), transparent 70%), #0a0708; }
+
+/* textes et composants sur fond beige */
+:is(.paper, .bord) :is(.eyebrow, .small, .lead, .body) { color: var(--ink2); }
+:is(.paper, .bord) :is(h2, h3, .h2, .h3, .h4, .side .h4, .path .h3) { color: var(--ink); }
+:is(.paper, .bord) .num { color: var(--achira); }
+:is(.paper, .bord) .link { color: var(--ink); }
+:is(.paper, .bord) .statement, :is(.paper, .bord) .quote { color: var(--ink); }
+:is(.paper, .bord) .quote em { color: var(--achira); }
+:is(.paper, .bord) .btn--solid { background: var(--ink); color: var(--ivory); }
+:is(.paper, .bord) .btn--solid:hover { background: #1b3a31; }
+:is(.paper, .bord) .btn--line { border-color: rgba(16,35,29,.45); color: var(--ink); }
+:is(.paper, .bord) .btn--line:hover { border-color: var(--ink); background: rgba(16,35,29,.05); }
+:is(.paper, .bord) .chip { border-color: rgba(16,35,29,.3); color: var(--ink); }
+:is(.paper, .bord) .chip--open { border-color: rgba(127,11,31,.45); color: var(--achira); background: rgba(127,11,31,.05); }
+:is(.paper, .bord) .chip--on { border-color: rgba(47,107,82,.5); color: var(--ok-ink); }
+:is(.paper, .bord) .chip[aria-pressed="true"] { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+:is(.paper, .bord) .side { background: #f6efe1; border-color: var(--paper-line); color: var(--ink); }
+:is(.paper, .bord) button.side:hover, :is(.paper, .bord) a.side:hover { background: #fffaf0; border-color: rgba(16,35,29,.3); }
+:is(.paper, .bord) .side--open { border-color: rgba(127,11,31,.4); }
+:is(.paper, .bord) .side__who { color: var(--ink2); }
+:is(.paper, .bord) .st--ok { color: var(--ok-ink); } :is(.paper, .bord) .st--part { color: #8a6a2f; } :is(.paper, .bord) .st--open { color: var(--achira); } :is(.paper, .bord) .st--na { color: var(--ink3); }
+:is(.paper, .bord) .cov__bar i { background: rgba(16,35,29,.12); }
+:is(.paper, .bord) .cov__bar i.ok { background: #5e9c80; } :is(.paper, .bord) .cov__bar i.part { background: #c19a5b; } :is(.paper, .bord) .cov__bar i.open { background: #c8344f; }
+:is(.paper, .bord) .cov__txt { color: var(--ink2); }
+:is(.paper, .bord) .pcard__t p, :is(.paper, .bord) .mcard p, :is(.paper, .bord) .grid4 p, :is(.paper, .bord) .path p { color: var(--ink2); }
+:is(.paper, .bord) .path li, :is(.paper, .bord) .grid4 > li, :is(.paper, .bord) .role { border-color: var(--paper-line); }
+:is(.paper, .bord) .switch { background: rgba(16,35,29,.25); }
+:is(.paper, .bord) .contact { background: #f6efe1; border-color: var(--paper-line); color: var(--ink); }
+:is(.paper, .bord) a.contact:hover { background: #fffaf0; border-color: rgba(16,35,29,.3); }
+:is(.paper, .bord) .contact p { color: var(--ink2); }
+:is(.paper, .bord) .contact__go { color: var(--achira); }
+:is(.paper, .bord) .contact--main { background: var(--achira); border-color: var(--achira); color: var(--ivory); }
+:is(.paper, .bord) .contact--main :is(p, .eyebrow, .h3, .contact__go) { color: var(--ivory); }
+:is(.paper, .bord) :is(.ask, .discord-band) { background: #f6efe1; border-color: var(--paper-line); }
+:is(.paper, .bord) :is(input[type=text], input[type=email], input[type=search], input[type=url], select, textarea) { background: #fffdf8; border-color: rgba(16,35,29,.3); color: var(--ink); }
+:is(.paper, .bord) :is(input, textarea)::placeholder { color: var(--ink3); }
+:is(.paper, .bord) .notice { color: var(--ink); background: rgba(47,107,82,.08); border-color: rgba(47,107,82,.35); }
+:is(.paper, .bord) .foot__motto { color: var(--achira); }
+:is(.paper, .bord) .collage img, :is(.paper, .bord) .pcard__img { box-shadow: 0 10px 30px rgba(16,35,29,.15); }
+
+/* boutons, étiquettes et liens plus lisibles */
+.btn { font-size: 13px; letter-spacing: .1em; min-height: 48px; padding: 0 22px; }
+.btn--sm { font-size: 12px; letter-spacing: .06em; min-height: 36px; padding: 0 14px; }
+.btn--line { border-color: rgba(238,229,211,.55); }
+.btn--line:hover { background: rgba(238,229,211,.08); }
+.btn--bord { box-shadow: 0 6px 18px rgba(127,11,31,.25); }
+.chip { font-size: 11px; letter-spacing: .08em; padding: 9px 14px; }
+.link { font-size: 12px; letter-spacing: .12em; }
+.nav__links a { font-size: 12px; letter-spacing: .12em; }
+.eyebrow { letter-spacing: .2em; }
+:focus-visible { outline-width: 2px; }
+
+/* =====================================================================
+   DÉPOSER UN PROJET : réponses faciles à toucher, résultat visible sur mobile
+   ===================================================================== */
+.wq .chip { text-transform: none; letter-spacing: 0; font: 500 14px/1.25 var(--sans); padding: 12px 16px; min-height: 46px; border-radius: 14px; text-align: left; }
+.wq .chip[aria-pressed="true"] { background: var(--ivory); color: var(--ink); border-color: var(--ivory); box-shadow: 0 0 0 3px rgba(197,166,118,.35); }
+.wq .chip[aria-pressed="true"]::before { content: '✓ '; font-weight: 700; color: var(--achira); }
+.wq legend { font-size: 17px; }
+.wq select { font-size: 16px; }
+.wiz__dock { display: none; }
+.wiz__sheet-close { display: none; }
+@media (max-width: 960px) {
+  body.has-dock { padding-bottom: 96px; }
+  .wiz__dock { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 75; gap: 12px; align-items: center; padding: 12px max(14px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); background: rgba(16,9,10,.96); border-top: 1px solid var(--iv30); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 -10px 30px rgba(0,0,0,.4); text-align: left; width: 100%; }
+  .wiz__dock-n { display: grid; gap: 2px; flex: none; }
+  .wiz__dock-n b { font: 400 30px/.9 var(--brand); color: var(--ivory); }
+  .wiz__dock-n span { font-size: 11px; color: var(--iv60); }
+  .wiz__dock-pills { flex: 1; min-width: 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; }
+  .wiz__dock-pills::-webkit-scrollbar { display: none; }
+  .dp { flex: none; min-width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; font: 400 14px/1 var(--brand); letter-spacing: .04em; border: 1px solid var(--iv30); color: var(--iv80); }
+  .dp--prioritaire { background: var(--achira); border-color: var(--achira); color: var(--ivory); }
+  .dp--important { border-color: var(--champ); color: var(--champ); }
+  .dp--dim { opacity: .4; border-style: dashed; }
+  .dp.is-new { box-shadow: 0 0 0 2px var(--champ), 0 0 14px rgba(197,166,118,.7); }
+  .wiz__dock-go { flex: none; padding: 10px 12px; border-radius: 999px; background: var(--ivory); color: var(--ink); font: 700 12px/1 var(--sans); }
+  .wiz__r { position: fixed !important; left: 0; right: 0; bottom: 0; z-index: 80; max-height: 82vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .45s var(--ease); box-shadow: 0 -20px 40px rgba(0,0,0,.5); }
+  .wiz__r.open { transform: none; }
+  .wiz__sheet-close { display: block; justify-self: center; width: 54px; height: 6px; border-radius: 3px; background: var(--iv30); margin: -6px auto 6px; }
+  .wiz__shade { position: fixed; inset: 0; z-index: 79; background: rgba(5,1,2,.55); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .wiz__shade.on { opacity: 1; pointer-events: auto; }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 960px) {
+  .wiz__dock.bump { animation: dockbump .6s var(--ease); }
+  @keyframes dockbump { 0% { transform: translateY(0); } 30% { transform: translateY(-6px); } 100% { transform: none; } }
+}
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }
