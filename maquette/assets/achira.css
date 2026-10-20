@@ -621,6 +621,24 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 @media (prefers-reduced-motion: reduce) { .pin-bg--photo img { opacity: .85; } }
 
+/* ---------- « Déposer un projet » : lumière fine qui fait le tour du contour ---------- */
+@property --glow-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.glow-cta { position: relative; isolation: isolate; overflow: hidden; }
+.glow-cta::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--glow-a), transparent 0deg 250deg, rgba(197,166,118,.35) 285deg, rgba(255,240,214,.95) 318deg, rgba(197,166,118,.35) 340deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.glow-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; z-index: 1; pointer-events: none; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,240,214,.22), transparent); opacity: 0; }
+.hero__cta { margin-top: 10px; }
+.hero__cta .glow-cta { min-height: 52px; padding: 0 26px; box-shadow: 0 0 0 1px rgba(197,166,118,.25), 0 10px 30px rgba(127,11,31,.45); }
+@media (prefers-reduced-motion: no-preference) {
+  .glow-cta::before { animation: glowspin 4s linear infinite; }
+  .glow-cta::after { animation: glowsweep 5.5s var(--ease) infinite 1.2s; }
+  .portal.glow-cta::before { animation-duration: 6s; }
+  @keyframes glowspin { to { --glow-a: 360deg; } }
+  @keyframes glowsweep { 0%, 62% { left: -60%; opacity: 0; } 66% { opacity: 1; } 90% { left: 130%; opacity: 1; } 100% { left: 130%; opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .glow-cta::before { background: linear-gradient(rgba(255,240,214,.6), rgba(255,240,214,.6)); } }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }

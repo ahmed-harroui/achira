@@ -528,7 +528,7 @@
       '<a class="nav__brand" href="' + ROOT + 'index.html" aria-label="ACHIRA, accueil">' + LOGO + '<b>ACHIRA</b></a>' +
       '<nav class="nav__links" aria-label="Navigation">' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '"' + (cur === n[2] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
       '<button type="button" class="nav__search" data-act="search" aria-label="Rechercher (touche /)">' + SEARCH_ICON + '</button>' +
-      '<a class="btn btn--bord nav__cta" href="' + ROOT + 'deposer.html">Déposer un projet</a>' +
+      '<a class="btn btn--bord nav__cta' + (PAGE === 'home' ? ' glow-cta' : '') + '" href="' + ROOT + 'deposer.html">Déposer un projet</a>' +
       '<button class="nav__menu" type="button" data-act="menu" aria-expanded="false">Menu</button></div></header>' +
       '<div class="drawer-nav" id="drawer" hidden>' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '">' + n[1] + '</a>'; }).join('') + '<a href="' + ROOT + 'deposer.html" style="color:var(--champ)">Déposer un projet</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener">Discord ↗</a></div>' +
       '<main id="view">' + view + '</main>' +
@@ -565,7 +565,8 @@
     }
     shell(
       pinBg('hero-accueil', 'photo') + '<section class="hero hero--full hero--pin"><div class="hero__in">' +
-      '<div class="hero__logo rv">' + LOGO + '</div><h1 class="display rv">' + esc(C.heroTitle) + '</h1><p class="lead lead--xl rv">' + esc(C.heroLead) + '</p><p class="eyebrow rv">' + esc(C.heroEyebrow) + '</p></div>' +
+      '<div class="hero__logo rv">' + LOGO + '</div><h1 class="display rv">' + esc(C.heroTitle) + '</h1><p class="lead lead--xl rv">' + esc(C.heroLead) + '</p><p class="eyebrow rv">' + esc(C.heroEyebrow) + '</p>' +
+      '<div class="row rv hero__cta"><a class="btn btn--bord glow-cta" href="deposer.html">Déposer un projet <span aria-hidden="true">→</span></a><a class="btn btn--line" href="projets.html">Voir les projets</a></div></div>' +
       '<a class="hero__down" href="#portes">Entrer <span aria-hidden="true">↓</span></a></section>' +
 
       '<section class="band dark" id="portes"><div class="in"><div class="head"><p class="eyebrow">Par où commencer</p><h2 class="h2">Choisis ta porte.</h2></div>' +
@@ -575,7 +576,7 @@
       tile('portal--open', 'metiers.html', 'Le cercle cherche', 'Métiers', 'Les savoir-faire attendus sur les projets en cours.', roles.length + ' ouverts', '') +
       tile('', 'cercle.html', 'ACHIRA', 'Le cercle', 'Qui nous sommes, ce qui nous relie.', '', 'u-cercle-1') +
       tile('', 'membres.html', 'Les personnes', 'Membres', 'Celles et ceux qui portent les sides.', DB.members.length + ' membres', 'u-cercle-3') +
-      tile('portal--join', 'deposer.html', 'Ton projet', 'Déposer un projet', 'Réponds à six questions : on te montre les sides touchés et les personnes du cercle qui peuvent t’aider.', '', '') +
+      tile('portal--join glow-cta', 'deposer.html', 'Ton projet', 'Déposer un projet', 'Réponds à six questions : on te montre les sides touchés et les personnes du cercle qui peuvent t’aider.', '', '') +
       '</div></div></section>' +
 
       '<section class="band bord" id="contact"><div class="in"><div class="head"><p class="eyebrow">Contact</p><h2 class="h2">Parlons-en.</h2><p class="body">Une question, une idée de projet, un savoir-faire à proposer : choisis le moyen qui te va.</p></div>' +
