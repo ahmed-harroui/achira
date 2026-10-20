@@ -597,10 +597,10 @@ button:disabled { opacity: .6; cursor: wait; }
 /* ---------- Image d'ouverture figée (Projets, Sides) ---------- */
 .pin-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #120407; pointer-events: none; }
 .phero--pin { position: relative; z-index: 1; }
-.phero--pin .in { min-width: 0; }
-.phero--pin .searchbar { max-width: 100%; }
-.pin-bg img { width: 100%; height: 100%; object-fit: cover; opacity: calc(.32 - var(--pin, 0) * .2); transform: scale(calc(1.04 + var(--pin, 0) * .08)); transform-origin: 50% 40%; will-change: transform, opacity; }
-.pin-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,4,6,.55) 0%, rgba(10,4,6,.1) 35%, rgba(10,4,6,.75) 100%); }
+.phero .in { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.phero--pin .searchbar { max-width: 100%; min-width: 0; }
+.pin-bg img { width: 100%; height: 100%; object-fit: cover; opacity: calc(.42 - var(--pin, 0) * .26); transform: scale(calc(1.04 + var(--pin, 0) * .08)); transform-origin: 50% 40%; will-change: transform, opacity; }
+.pin-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,4,6,.35) 0%, rgba(10,4,6,0) 30%, rgba(10,4,6,.2) 55%, rgba(10,4,6,.7) 100%); }
 .phero--pin { background: transparent; min-height: 88vh; min-height: 88svh; display: flex; align-items: flex-end; }
 .phero--pin .in { width: 100%; }
 .phero--pin ~ .band, .phero--pin ~ .foot { position: relative; z-index: 1; box-shadow: 0 -24px 48px rgba(0,0,0,.35); }
