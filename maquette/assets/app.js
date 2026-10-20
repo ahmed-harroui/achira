@@ -605,7 +605,7 @@
   function pSides() {
     var C = DB.content, roles = allRoles(), feat = pubProjects()[0];
     shell(
-      '<section class="phero"><div class="in"><p class="eyebrow rv">Les sides d’un projet</p><h1 class="h1 rv">Un projet a ' + DB.domains.length + ' côtés.</h1><p class="lead rv" style="max-width:40ch">' + esc(C.sidesIntro) + '</p>' +
+      pinBg('hero-sides') + '<section class="phero phero--pin"><div class="in"><p class="eyebrow rv">Les sides d’un projet</p><h1 class="h1 rv">Un projet a ' + DB.domains.length + ' côtés.</h1><p class="lead rv" style="max-width:40ch">' + esc(C.sidesIntro) + '</p>' +
       '<button type="button" class="searchbar rv" data-act="search">' + SEARCH_ICON + '<span>Rechercher un side, une mission, une compétence, un métier…</span><kbd>/</kbd></button></div></section>' +
       '<section class="band bord"><div class="in"><div class="head head--split"><div class="head"><p class="eyebrow">Par pôle</p><h2 class="h2">Tous les sides.</h2></div>' + (feat ? '<a class="link" href="projet.html#' + feat.slug + '">Voir un projet complet <span>→</span></a>' : '') + '</div>' +
       '<div class="poles">' + DB.poles.map(function (pl) {
@@ -628,8 +628,16 @@
 
   /* ----- Projets ----- */
   var F = { phase: 'Tous', q: '', pole: 'tous', d: '', p: '' };
+  /* Image d'ouverture figée : elle reste en place (faible opacité) pendant que le contenu glisse par-dessus */
+  function pinBg(name) { return '<div class="pin-bg" aria-hidden="true"><img src="' + img(name) + '" alt=""></div>'; }
+  var pinRaf = 0;
+  function pinScroll() {
+    if (pinRaf) return;
+    pinRaf = requestAnimationFrame(function () { pinRaf = 0; document.documentElement.style.setProperty('--pin', Math.min(1, window.scrollY / (window.innerHeight * .9)).toFixed(3)); });
+  }
+  if (PAGE === 'projets' || PAGE === 'sides') { window.addEventListener('scroll', pinScroll, { passive: true }); }
   function pProjets() {
-    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Les projets</p><h1 class="h1 rv">Chaque projet, tous ses côtés.</h1><p class="lead rv" style="max-width:38ch">De l’idée à la pièce finie : la comptabilité, les contrats, l’atelier, l’image. Chaque projet montre ce qui est couvert et ce qui manque.</p></div></section>' +
+    shell(pinBg('hero-projets') + '<section class="phero phero--pin"><div class="in"><p class="eyebrow rv">Les projets</p><h1 class="h1 rv">Chaque projet, tous ses côtés.</h1><p class="lead rv" style="max-width:38ch">De l’idée à la pièce finie : la comptabilité, les contrats, l’atelier, l’image. Chaque projet montre ce qui est couvert et ce qui manque.</p></div></section>' +
       '<section class="band dark band--tight"><div class="in"><div class="toolbar"><div class="chips" role="group" aria-label="Phase">' + ['Tous'].concat(PHASES).map(function (ph) { return '<button class="chip" type="button" data-act="phase" data-v="' + ph + '" aria-pressed="' + (F.phase === ph) + '">' + ph + '</button>'; }).join('') + '</div>' +
       '<input type="search" id="pq" data-in="pq" placeholder="Rechercher un projet" aria-label="Rechercher un projet" style="max-width:280px;margin-left:auto"></div>' + legend() + '<div class="pgrid" id="results"></div></div></section>');
     renderProjets();
