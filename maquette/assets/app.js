@@ -300,7 +300,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { lang: 1, way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -488,7 +488,7 @@
     var words = norm(q).split(/\s+/).filter(Boolean), res = $('#searchres');
     if (!words.length) { res.innerHTML = '<p class="small search__hint">Tape un side, une mission, une compétence, un métier, un membre ou un projet. Exemples : « TVA », « comptable », « packaging », « Marrakech ».</p>'; return; }
     var hits = searchIndex().map(function (x) { var h = norm(x.l + ' ' + x.s), l = norm(x.l); return words.every(function (w) { return h.indexOf(w) > -1; }) ? { x: x, r: (l.indexOf(words[0]) === 0 ? 2 : 0) + (l.indexOf(words[0]) > -1 ? 1 : 0) } : null; }).filter(Boolean);
-    if (!hits.length) { res.innerHTML = '<p class="small search__hint">Aucun résultat pour « ' + esc(q) + ' ».</p>'; return; }
+    if (!hits.length) { res.innerHTML = '<p class="small search__hint">Aucun résultat pour « <b>' + esc(q) + '</b> ».</p>'; return; }
     res.innerHTML = GROUPS.map(function (g) {
       var l = hits.filter(function (h) { return h.x.g === g; }).sort(function (a, b) { return b.r - a.r; });
       if (!l.length) return '';
@@ -521,6 +521,82 @@
 
   /* ================= SITE PUBLIC ================= */
   var NAV = [['projets.html', 'Projets', 'projets'], ['sides.html', 'Sides', 'sides'], ['metiers.html', 'Métiers', 'metiers'], ['membres.html', 'Membres', 'membres'], ['cercle.html', 'Le cercle', 'cercle'], ['rejoindre.html', 'Rejoindre', 'rejoindre']];
+  /* ================= LANGUES (site public) : FR · EN · AR =================
+     Le site s'affiche en français puis chaque texte affiché est traduit à la volée (dictionnaire i18n.js),
+     y compris après chaque clic. La dashboard reste en français. */
+  var LANGS = { fr: 'FR', en: 'EN', ar: 'ع' };
+  var LANG = (function () { if (PAGE.indexOf('admin-') === 0) return 'fr'; try { var l = localStorage.getItem('achira-lang'); return LANGS[l] ? l : 'fr'; } catch (e) { return 'fr'; } })();
+  var LI = LANG === 'en' ? 0 : 1, DICT = window.ACHIRA_I18N || {};
+  function T1(s) {
+    var d = DICT[s.replace(/\d+/g, '{n}')]; if (!d) return null;
+    var nums = s.match(/\d+/g) || [], i = 0;
+    return d[LI].replace(/\{n\}/g, function () { return nums[i++] || ''; });
+  }
+  function TR(s) {
+    var r = T1(s), m, x; if (r != null) return r;
+    if ((m = s.match(/^(.*) — ACHIRA$/)) && (x = TR(m[1])) != null) return x + ' — ACHIRA';
+    if (s.indexOf(' · ') > -1) { var any = false, out = s.split(' · ').map(function (p) { var t = TR(p.trim()); if (t != null) { any = true; return t; } return p; }); return any ? out.join(' · ') : null; }
+    if ((m = s.match(/^(‹|›|·|✦|\+|−) ?(.+)$/)) && (x = TR(m[2])) != null) return m[1] + ' ' + x;
+    if ((m = s.match(/^« (.+) »$/)) && (x = TR(m[1])) != null) return '« ' + x + ' »';
+    if ((m = s.match(/^(.+) \((\d+)\)$/)) && (x = TR(m[1])) != null) return x + ' (' + m[2] + ')';
+    if ((m = s.match(/^(Touche|Intervient sur) : (.+)$/)) && (x = TR(m[2])) != null) return (TR(m[1]) || m[1]) + ' : ' + x;
+    if ((m = s.match(/^(\d+) (.+?)(?: : (.+))?$/)) && (x = TR(m[2])) != null) return m[1] + ' ' + x + (m[3] ? ' : ' + (TR(m[3]) || m[3]) : '');
+    if (s.indexOf(', ') > -1) { var any2 = false, out2 = s.split(', ').map(function (p) { var t = TR(p); if (t != null) { any2 = true; return t; } return p; }); return any2 ? out2.join(LANG === 'ar' ? '، ' : ', ') : null; }
+    return null;
+  }
+  function trText(n) {
+    var src = n.__fr != null && n.nodeValue === n.__tr ? n.__fr : n.nodeValue, core = src.trim();
+    if (!core || !/[A-Za-zÀ-ÿ]/.test(core)) return;
+    var t = TR(core.replace(/\s+/g, ' ')); if (t == null) return;
+    var out = src.replace(core, t); n.__fr = src; n.__tr = out; if (n.nodeValue !== out) n.nodeValue = out;
+  }
+  function trEl(el) {
+    if (el.nodeType === 3) { trText(el); return; }
+    if (el.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA)$/.test(el.nodeName)) return;
+    ['placeholder', 'aria-label', 'title'].forEach(function (a) {
+      var v = el.getAttribute(a); if (!v) return;
+      var k = 'data-fr-' + a, src = el.getAttribute(k) || v, t = TR(src.trim());
+      if (t != null && v !== t) { el.setAttribute(k, src); el.setAttribute(a, t); }
+    });
+    var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT), n;
+    while ((n = w.nextNode())) {
+      if (n.nodeType === 3) { if (!n.parentNode || !/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName)) trText(n); }
+      else if (n.attributes && (n.hasAttribute('placeholder') || n.hasAttribute('aria-label') || n.hasAttribute('title'))) trEl.attrOnly(n);
+    }
+  }
+  trEl.attrOnly = function (el) {
+    ['placeholder', 'aria-label', 'title'].forEach(function (a) {
+      var v = el.getAttribute(a); if (!v) return;
+      var k = 'data-fr-' + a, src = el.getAttribute(k) || v, t = TR(src.trim());
+      if (t != null && v !== t) { el.setAttribute(k, src); el.setAttribute(a, t); }
+    });
+  };
+  function trTitle() { var t = TR(document.title.replace(/^.*?​/, '')); if (t) document.title = t; }
+  if (LANG !== 'fr') {
+    document.documentElement.lang = LANG;
+    if (LANG === 'ar') {
+      document.documentElement.dir = 'rtl';
+      var fl = document.createElement('link'); fl.rel = 'stylesheet';
+      fl.href = 'https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Amiri:ital,wght@0,400;1,400&display=swap';
+      document.head.appendChild(fl);
+    }
+    var trBusy = false, trObs = new MutationObserver(function (muts) {
+      if (trBusy) return; trBusy = true;
+      muts.forEach(function (m) {
+        if (m.type === 'characterData') trText(m.target);
+        else m.addedNodes.forEach(trEl);
+      });
+      trObs.takeRecords(); trBusy = false; trTitle();
+    });
+    trObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function langSwitch(cls) {
+    return '<div class="lang ' + (cls || '') + '" role="group" aria-label="Langue / Language / اللغة">' + Object.keys(LANGS).map(function (l) {
+      return '<button type="button" data-act="lang" data-v="' + l + '" aria-pressed="' + (LANG === l) + '" lang="' + l + '">' + LANGS[l] + '</button>';
+    }).join('') + '</div>';
+  }
+  ACT.lang = function (b) { try { localStorage.setItem('achira-lang', b.dataset.v); } catch (e) {} location.reload(); };
+
   /* « Your way » regroupe les pages pour avancer : projets, sides, métiers, membres, rejoindre */
   var WAY = [['projets.html', 'Projets', 'projets', 'Chaque projet, side par side'], ['sides.html', 'Sides', 'sides', 'Les 16 côtés d’un projet'], ['metiers.html', 'Métiers', 'metiers', 'Ce que le cercle cherche'], ['membres.html', 'Membres', 'membres', 'Celles et ceux qui avancent'], ['rejoindre.html', 'Rejoindre', 'rejoindre', 'Proposer son savoir-faire']];
   function wayItems(cur) {
@@ -539,12 +615,13 @@
       '<div class="nav__way"><button type="button" class="nav__waybtn" data-act="way" aria-expanded="false" aria-controls="waymenu"' + (wayCur ? ' aria-current="page"' : '') + '>Your way' + (wayCur ? ' · <span>' + wayCur[1] + '</span>' : '') + ' <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>' +
       '<div class="way-menu" id="waymenu">' + wayItems(cur) + '</div></div>' +
       '<a href="' + ROOT + 'cercle.html"' + (cur === 'cercle' ? ' aria-current="page"' : '') + '>Le cercle</a></nav>' +
+      langSwitch('lang--nav') +
       '<button type="button" class="nav__search" data-act="search" aria-label="Rechercher (touche /)">' + SEARCH_ICON + '</button>' +
       '<a class="btn btn--bord nav__cta' + (PAGE === 'home' ? ' glow-cta' : '') + '" href="' + ROOT + 'deposer.html">Déposer un projet</a>' +
       '<button class="nav__menu" type="button" data-act="menu" aria-expanded="false" aria-controls="drawer"><span class="nav__burger" aria-hidden="true"></span>Menu</button></div></header>' +
       '<div class="drawer-nav" id="drawer" hidden><p class="lbl">Your way</p>' + wayItems(cur) +
       '<div class="drawer-nav__row"><a href="' + ROOT + 'cercle.html" class="drawer-nav__plain">Le cercle</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener" class="drawer-nav__plain">Discord ↗</a></div>' +
-      '<a class="btn btn--bord" href="' + ROOT + 'deposer.html">Déposer un projet</a></div>' +
+      '<a class="btn btn--bord" href="' + ROOT + 'deposer.html">Déposer un projet</a>' + langSwitch('lang--drawer') + '</div>' +
       '<main id="view">' + view + '</main>' +
       '<footer class="foot"><div class="in">' +
       '<div class="foot__brand">' + LOGO + '<p class="lead" style="font-size:22px">Un cercle qui avance ensemble.</p><p class="foot__motto">' + esc(DB.content.motto) + '</p></div>' +
@@ -625,7 +702,7 @@
     if (!msg) { $('#ask-err').textContent = 'Écris ton message avant de l’envoyer.'; return; }
     b.disabled = true; b.textContent = 'Envoi…';
     sendMessage({ type: 'question', title: msg.slice(0, 90) + (msg.length > 90 ? '…' : ''), body: msg + (mail ? '\n\nRépondre à : ' + mail : ''), author: name || 'Visiteur' }).then(function () {
-      e.target.querySelector('.ask__fields').innerHTML = '<div class="notice"><b>Merci' + (name ? ' ' + esc(name) : '') + '.</b> Ton message est arrivé à l’équipe' + (mail ? ', elle te répond par e-mail.' : '.') + '</div>';
+      e.target.querySelector('.ask__fields').innerHTML = '<div class="notice"><b>Merci</b>' + (name ? ' <b>' + esc(name) + '</b>' : '') + '. <span>' + (mail ? 'Ton message est arrivé à l’équipe, elle te répond par e-mail.' : 'Ton message est arrivé à l’équipe.') + '</span></div>';
     }, function () { b.disabled = false; b.textContent = 'Envoyer'; $('#ask-err').textContent = 'L’envoi n’a pas abouti. Réessaie ou écris-nous sur Discord.'; });
   });
 
@@ -733,7 +810,7 @@
         '<div><p class="lbl">Où en sont les projets</p><div class="chips">' + PHASES.map(function (ph) { return '<button type="button" class="chip" data-act="fyphase" data-v="' + ph + '" aria-pressed="' + (FY.phases.indexOf(ph) > -1) + '">' + ph + '</button>'; }).join('') + '</div></div></div>';
     var title = FY.mode === 'proposer' ? 'Les projets qui ont besoin de vous' : 'Les meilleurs projets pour vous';
     var list = FY.mode === 'proposer' && FY.job && !best.length
-      ? '<div class="fy-empty"><p class="body">Aucun projet publié ne cherche « ' + esc(FY.job) + ' » pour l’instant.</p><div class="row"><a class="btn btn--solid btn--sm" href="rejoindre.html">Nous faire connaître</a><a class="btn btn--line btn--sm" href="metiers.html">Voir les métiers recherchés</a></div></div>'
+      ? '<div class="fy-empty"><p class="body">Aucun projet publié ne cherche « <b>' + esc(FY.job) + '</b> » pour l’instant.</p><div class="row"><a class="btn btn--solid btn--sm" href="rejoindre.html">Nous faire connaître</a><a class="btn btn--line btn--sm" href="metiers.html">Voir les métiers recherchés</a></div></div>'
       : (FY.mode === 'proposer' && !FY.job ? '<p class="body">Indiquez votre métier ou votre service : on vous montre les projets qui le recherchent.</p>' : '<div class="pgrid">' + (best.length ? best : top).slice(0, 3).map(fyCard).join('') + '</div>');
     box.innerHTML = '<div class="head head--split"><div class="head"><p class="eyebrow">Pour toi · ' + (FY.mode === 'proposer' ? 'on propose notre savoir-faire' : 'on découvre les projets') + '</p><h2 class="h2">' + title + '</h2></div><button type="button" class="link" data-act="fymode" data-v="">Changer de profil <span>↺</span></button></div>' + form + list;
   }
@@ -1005,7 +1082,7 @@
       status: 'draft', featured: false, img: 'u-cercle-2', story: v('w-desc'), achira: false, specialite: '', origin: 'depot',
       submitter: { name: v('w-name'), email: v('w-email'), when: new Date().toLocaleDateString('fr-FR') }, answers: JSON.parse(JSON.stringify(WA)), sides: suggestedSides(r, DB) };
     var nSides = r.list.filter(function (x) { return x.score >= 3; }).length, nPpl = Math.min(r.members.length, 5);
-    function done(extra) { $('#wizf').outerHTML = '<div class="notice wq"><h3 class="h3">Merci ' + esc(v('w-name')) + '.</h3><p style="margin-top:8px">Ton projet « ' + esc(v('w-title')) + ' » est bien arrivé au cercle, avec ' + nSides + ' sides à pourvoir et ' + nPpl + ' personnes suggérées. ' + extra + '</p></div>'; }
+    function done(extra) { $('#wizf').outerHTML = '<div class="notice wq"><h3 class="h3">Merci <span>' + esc(v('w-name')) + '</span>.</h3><p style="margin-top:8px">Ton projet « <b>' + esc(v('w-title')) + '</b> » est bien arrivé au cercle, avec ' + nSides + ' sides à pourvoir et ' + nPpl + ' personnes suggérées. <span>' + extra + '</span></p></div>'; }
     if (ONLINE) {
       var btn = $('#wizf button[type=submit]'); btn.disabled = true; btn.textContent = 'Envoi…';
       SB.from('projects').insert(projectToRow(p)).then(function (res) {
@@ -1047,7 +1124,7 @@
       var v = function (id) { return $('#' + id).value.trim(); };
       if (!v('j-name') || !v('j-email') || !v('j-metier')) { $('#j-err').textContent = 'Indique ton nom, ton e-mail et ton métier pour envoyer ta proposition.'; return; }
       var sub = { id: Date.now(), name: v('j-name'), email: v('j-email'), metier: v('j-metier'), type: v('j-type'), project: v('j-proj'), domain: v('j-dom'), link: v('j-link'), msg: v('j-msg'), when: 'à l’instant', status: 'new' };
-      var thanks = function (extra) { $('#join').outerHTML = '<div class="notice full"><h3 class="h3">Merci ' + esc(v('j-name')) + '.</h3><p style="margin-top:8px">Ta proposition est bien arrivée. ' + extra + '</p></div>'; };
+      var thanks = function (extra) { $('#join').outerHTML = '<div class="notice full"><h3 class="h3">Merci <span>' + esc(v('j-name')) + '</span>.</h3><p style="margin-top:8px"><span>Ta proposition est bien arrivée.</span> <span>' + extra + '</span></p></div>'; };
       if (ONLINE) {
         var row = subToRow(sub); delete row.id; delete row.notes;
         var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Envoi…';
