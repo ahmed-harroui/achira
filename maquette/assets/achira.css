@@ -606,6 +606,21 @@ button:disabled { opacity: .6; cursor: wait; }
 .phero--pin ~ .band, .phero--pin ~ .foot { position: relative; z-index: 1; box-shadow: 0 -24px 48px rgba(0,0,0,.35); }
 @media (prefers-reduced-motion: reduce) { .pin-bg img { transform: none; opacity: .28; } }
 
+/* Accueil : la photo de l'atelier, bien visible, figée ; le texte se place sur le mur vert à gauche */
+.pin-bg--photo { background: #07110e; }
+.pin-bg--photo img { opacity: calc(1 - var(--pin, 0) * .55); object-position: 70% 50%; transform: scale(calc(1.02 + var(--pin, 0) * .06)); }
+.pin-bg--photo::after { background: linear-gradient(90deg, rgba(5,13,11,.82) 0%, rgba(5,13,11,.55) 38%, rgba(5,13,11,0) 66%), linear-gradient(180deg, rgba(5,13,11,.35) 0%, rgba(5,13,11,0) 25%, rgba(5,13,11,0) 70%, rgba(5,13,11,.85) 100%); }
+.hero--pin { position: relative; z-index: 1; background: transparent; place-items: center start; text-align: left; }
+.hero--pin .hero__in { justify-items: start; max-width: 640px; }
+.hero--pin .hero__logo { width: clamp(70px, 8vw, 110px); }
+.hero--pin ~ .band, .hero--pin ~ .foot { position: relative; z-index: 1; box-shadow: 0 -24px 48px rgba(0,0,0,.35); }
+@media (max-width: 760px) {
+  .pin-bg--photo img { object-position: 78% 50%; }
+  .pin-bg--photo::after { background: linear-gradient(180deg, rgba(5,13,11,.3) 0%, rgba(5,13,11,.15) 30%, rgba(5,13,11,.8) 62%, rgba(5,13,11,.95) 100%); }
+  .hero--pin { place-items: end start; }
+}
+@media (prefers-reduced-motion: reduce) { .pin-bg--photo img { opacity: .85; } }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }

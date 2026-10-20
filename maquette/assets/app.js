@@ -564,7 +564,7 @@
         '<div class="portal__bot"><h2 class="portal__t">' + title + '</h2><p>' + txt + '</p><span class="portal__go" aria-hidden="true">→</span></div></div></a>';
     }
     shell(
-      '<section class="hero hero--full"><img class="hero__bg" src="' + img('poster-achira') + '" alt=""><div class="hero__in">' +
+      pinBg('hero-accueil', 'photo') + '<section class="hero hero--full hero--pin"><div class="hero__in">' +
       '<div class="hero__logo rv">' + LOGO + '</div><h1 class="display rv">' + esc(C.heroTitle) + '</h1><p class="lead lead--xl rv">' + esc(C.heroLead) + '</p><p class="eyebrow rv">' + esc(C.heroEyebrow) + '</p></div>' +
       '<a class="hero__down" href="#portes">Entrer <span aria-hidden="true">↓</span></a></section>' +
 
@@ -629,13 +629,13 @@
   /* ----- Projets ----- */
   var F = { phase: 'Tous', q: '', pole: 'tous', d: '', p: '' };
   /* Image d'ouverture figée : elle reste en place (faible opacité) pendant que le contenu glisse par-dessus */
-  function pinBg(name) { return '<div class="pin-bg" aria-hidden="true"><img src="' + img(name) + '" alt=""></div>'; }
+  function pinBg(name, variant) { return '<div class="pin-bg' + (variant ? ' pin-bg--' + variant : '') + '" aria-hidden="true"><img src="' + img(name) + '" alt="" fetchpriority="high"></div>'; }
   var pinRaf = 0;
   function pinScroll() {
     if (pinRaf) return;
     pinRaf = requestAnimationFrame(function () { pinRaf = 0; document.documentElement.style.setProperty('--pin', Math.min(1, window.scrollY / (window.innerHeight * .9)).toFixed(3)); });
   }
-  if (PAGE === 'projets' || PAGE === 'sides') { window.addEventListener('scroll', pinScroll, { passive: true }); }
+  if (PAGE === 'projets' || PAGE === 'sides' || PAGE === 'home') { window.addEventListener('scroll', pinScroll, { passive: true }); }
   function pProjets() {
     shell(pinBg('hero-projets') + '<section class="phero phero--pin"><div class="in"><p class="eyebrow rv">Les projets</p><h1 class="h1 rv">Chaque projet, tous ses côtés.</h1><p class="lead rv" style="max-width:38ch">De l’idée à la pièce finie : la comptabilité, les contrats, l’atelier, l’image. Chaque projet montre ce qui est couvert et ce qui manque.</p></div></section>' +
       '<section class="band dark band--tight"><div class="in"><div class="toolbar"><div class="chips" role="group" aria-label="Phase">' + ['Tous'].concat(PHASES).map(function (ph) { return '<button class="chip" type="button" data-act="phase" data-v="' + ph + '" aria-pressed="' + (F.phase === ph) + '">' + ph + '</button>'; }).join('') + '</div>' +
