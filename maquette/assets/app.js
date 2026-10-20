@@ -300,7 +300,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -521,27 +521,54 @@
 
   /* ================= SITE PUBLIC ================= */
   var NAV = [['projets.html', 'Projets', 'projets'], ['sides.html', 'Sides', 'sides'], ['metiers.html', 'Métiers', 'metiers'], ['membres.html', 'Membres', 'membres'], ['cercle.html', 'Le cercle', 'cercle'], ['rejoindre.html', 'Rejoindre', 'rejoindre']];
+  /* « Your way » regroupe les pages pour avancer : projets, sides, métiers, membres, rejoindre */
+  var WAY = [['projets.html', 'Projets', 'projets', 'Chaque projet, side par side'], ['sides.html', 'Sides', 'sides', 'Les 16 côtés d’un projet'], ['metiers.html', 'Métiers', 'metiers', 'Ce que le cercle cherche'], ['membres.html', 'Membres', 'membres', 'Celles et ceux qui avancent'], ['rejoindre.html', 'Rejoindre', 'rejoindre', 'Proposer son savoir-faire']];
+  function wayItems(cur) {
+    return '<ul class="way-list">' + WAY.map(function (w, i) {
+      return '<li><a href="' + ROOT + w[0] + '"' + (cur === w[2] ? ' aria-current="page"' : '') + '><span class="num">' + pad(i + 1) + '</span><span><b>' + w[1] + '</b><small>' + w[3] + '</small></span></a></li>';
+    }).join('') + '</ul>';
+  }
+  var wayCur = null;
   function shell(view) {
     var cur = PAGE === 'projet' ? 'projets' : PAGE;
+    wayCur = WAY.find(function (w) { return w[2] === cur; }) || null;
     APP.innerHTML =
       '<header class="nav" id="nav"><div class="nav__pill">' +
       '<a class="nav__brand" href="' + ROOT + 'index.html" aria-label="ACHIRA, accueil">' + LOGO + '<b>ACHIRA</b></a>' +
-      '<nav class="nav__links" aria-label="Navigation">' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '"' + (cur === n[2] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
+      '<nav class="nav__links" aria-label="Navigation">' +
+      '<div class="nav__way"><button type="button" class="nav__waybtn" data-act="way" aria-expanded="false" aria-controls="waymenu"' + (wayCur ? ' aria-current="page"' : '') + '>Your way' + (wayCur ? ' · <span>' + wayCur[1] + '</span>' : '') + ' <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>' +
+      '<div class="way-menu" id="waymenu">' + wayItems(cur) + '</div></div>' +
+      '<a href="' + ROOT + 'cercle.html"' + (cur === 'cercle' ? ' aria-current="page"' : '') + '>Le cercle</a></nav>' +
       '<button type="button" class="nav__search" data-act="search" aria-label="Rechercher (touche /)">' + SEARCH_ICON + '</button>' +
       '<a class="btn btn--bord nav__cta' + (PAGE === 'home' ? ' glow-cta' : '') + '" href="' + ROOT + 'deposer.html">Déposer un projet</a>' +
-      '<button class="nav__menu" type="button" data-act="menu" aria-expanded="false">Menu</button></div></header>' +
-      '<div class="drawer-nav" id="drawer" hidden>' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '">' + n[1] + '</a>'; }).join('') + '<a href="' + ROOT + 'deposer.html" style="color:var(--champ)">Déposer un projet</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener">Discord ↗</a></div>' +
+      '<button class="nav__menu" type="button" data-act="menu" aria-expanded="false" aria-controls="drawer"><span class="nav__burger" aria-hidden="true"></span>Menu</button></div></header>' +
+      '<div class="drawer-nav" id="drawer" hidden><p class="lbl">Your way</p>' + wayItems(cur) +
+      '<div class="drawer-nav__row"><a href="' + ROOT + 'cercle.html" class="drawer-nav__plain">Le cercle</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener" class="drawer-nav__plain">Discord ↗</a></div>' +
+      '<a class="btn btn--bord" href="' + ROOT + 'deposer.html">Déposer un projet</a></div>' +
       '<main id="view">' + view + '</main>' +
       '<footer class="foot"><div class="in">' +
       '<div class="foot__brand">' + LOGO + '<p class="lead" style="font-size:22px">Un cercle qui avance ensemble.</p><p class="foot__motto">' + esc(DB.content.motto) + '</p></div>' +
-      '<ul><li class="eyebrow">Explorer</li>' + NAV.map(function (n) { return '<li><a href="' + ROOT + n[0] + '">' + n[1] + '</a></li>'; }).join('') + '</ul>' +
+      '<ul><li class="eyebrow">Your way</li>' + NAV.map(function (n) { return '<li><a href="' + ROOT + n[0] + '">' + n[1] + '</a></li>'; }).join('') + '</ul>' +
       '<ul><li class="eyebrow">Contact</li><li>' + dBtn('btn--line btn--sm') + '</li><li><a href="' + ROOT + 'rejoindre.html">Rejoindre ou proposer un projet</a></li><li><span class="small">Instagram ACHIRA · ' + (DB.settings.instagram ? esc(DB.settings.instagram) : 'bientôt') + '</span></li><li><span class="small">Site AKARBI · ' + (DB.settings.akarbiUrl ? esc(DB.settings.akarbiUrl) : 'bientôt') + '</span></li><li><a href="' + ROOT + 'admin/index.html">Dashboard</a></li></ul>' +
       '</div><div class="foot__base"><span>© ' + new Date().getFullYear() + ' ACHIRA · cercle AKARBI</span><span>Maquette · contenus d’exemple</span></div></footer>';
     var nav = $('#nav');
     var onScroll = function () { nav.classList.toggle('is-solid', window.scrollY > 40); };
     window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
   }
-  ACT.menu = function (b) { var d = $('#drawer'); var o = d.hidden; d.hidden = !o; b.setAttribute('aria-expanded', o); b.textContent = o ? 'Fermer' : 'Menu'; document.body.style.overflow = o ? 'hidden' : ''; };
+  function closeMenus() {
+    var d = $('#drawer'), m = $('.nav__menu'), w = $('.nav__way');
+    if (d && !d.hidden) { d.hidden = true; if (m) { m.setAttribute('aria-expanded', 'false'); m.lastChild.textContent = 'Menu'; m.classList.remove('is-open'); } }
+    if (w && w.classList.contains('open')) { w.classList.remove('open'); $('.nav__waybtn').setAttribute('aria-expanded', 'false'); }
+  }
+  ACT.menu = function (b) {
+    var d = $('#drawer'), o = d.hidden;
+    closeMenus(); if (!o) return;
+    d.hidden = false; b.setAttribute('aria-expanded', 'true'); b.lastChild.textContent = 'Fermer'; b.classList.add('is-open');
+  };
+  ACT.way = function (b) { var w = b.parentNode, o = !w.classList.contains('open'); closeMenus(); w.classList.toggle('open', o); b.setAttribute('aria-expanded', o); };
+  // un appui ou un clic en dehors, ou Échap, referme le menu
+  document.addEventListener('click', function (e) { if (!e.target.closest || e.target.closest('#drawer, .nav__menu, .nav__way')) return; closeMenus(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenus(); });
 
   function pcard(p) {
     return '<a class="pcard" href="' + ROOT + 'projet.html#' + p.slug + '"><div class="pcard__img"><img src="' + img(p.img) + '" alt="" loading="lazy"><span class="pcard__tag">' + esc(p.phase) + '</span>' + (p.achira ? '<span class="pcard__ach">' + LOGO + (p.specialite ? esc(p.specialite) : 'Spécialité ACHIRA') + '</span>' : '') + '</div>' +
