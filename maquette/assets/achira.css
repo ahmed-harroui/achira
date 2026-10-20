@@ -344,6 +344,12 @@ a.chip:hover { border-color: var(--ivory); }
 .lvl--utile { color: var(--iv60); }
 @media (max-width: 960px) { .wiz { grid-template-columns: 1fr; } .wiz__r { position: static; } }
 
+/* ---------- Demande et membres ---------- */
+.dbar { display: block; flex: 1; min-width: 60px; height: 8px; border-radius: 4px; background: var(--iv08); overflow: hidden; }
+.dbar i { display: block; height: 100%; border-radius: 4px; }
+.gap { font: 400 18px/1 var(--brand); letter-spacing: .04em; }
+.gap--neg { color: var(--s-open); } .gap--ok { color: var(--s-ok); }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }

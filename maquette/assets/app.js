@@ -639,7 +639,7 @@
   }
 
   /* ================= DASHBOARD ================= */
-  var ADM = [['Pilotage'], ['index.html', 'Tableau de bord', 'admin-dash'], ['Contenu'], ['projets.html', 'Projets', 'admin-projets'], ['modele.html', 'Modèle des sides', 'admin-modele'], ['contenus.html', 'Textes du site', 'admin-contenus'], ['membres.html', 'Membres', 'admin-membres'], ['Cercle'], ['candidatures.html', 'Candidatures', 'admin-candidatures'], ['reglages.html', 'Réglages', 'admin-reglages']];
+  var ADM = [['Pilotage'], ['index.html', 'Tableau de bord', 'admin-dash'], ['demande.html', 'Demande et membres', 'admin-demande'], ['Contenu'], ['projets.html', 'Projets', 'admin-projets'], ['modele.html', 'Modèle des sides', 'admin-modele'], ['contenus.html', 'Textes du site', 'admin-contenus'], ['membres.html', 'Membres', 'admin-membres'], ['Cercle'], ['candidatures.html', 'Candidatures', 'admin-candidatures'], ['reglages.html', 'Réglages', 'admin-reglages']];
   function newSubs() { return DB.subs.filter(function (s) { return s.status === 'new'; }).length; }
   function admin(eb, title, actions, body) {
     var cur = PAGE === 'admin-projet' ? 'admin-projets' : PAGE;
@@ -904,6 +904,66 @@
     DB.poles[DB.poles.length - 1].d.push(id); save(); history.replaceState(null, '', '#' + id); aModele(); toast('Side ajouté');
   };
 
+  /* ----- Demande et membres : ce que les projets demandent face à ce que le cercle offre ----- */
+  var DM = { src: 'sans-marches' };
+  function demandData() {
+    var projs = DB.projects.filter(function (p) { return p.status !== 'arch' && (DM.src === 'tout' || (DM.src === 'marches' ? p.market : !p.market)); });
+    var jobs = {}, sides = {}, mem = {};
+    function J(j) { var k = norm(j); return jobs[k] = jobs[k] || { job: j, projets: [], membres: jobMembers(j), interesses: [], sides: [] }; }
+    DB.domains.forEach(function (d) { sides[d.id] = { d: d, open: 0, part: 0, ok: 0, projets: [] }; d.metiers.forEach(function (j) { var x = J(j); if (x.sides.indexOf(d) < 0) x.sides.push(d); }); });
+    projs.forEach(function (p) {
+      Object.keys(p.sides).forEach(function (k) {
+        var s = p.sides[k], sd = sides[k]; if (!sd || s.s === 'na') return;
+        sd[s.s]++; if (s.s !== 'ok') sd.projets.push(p);
+        if (s.s !== 'ok') (s.open || []).forEach(function (j) { var x = J(j); if (x.projets.indexOf(p) < 0) x.projets.push(p); });
+        (s.suggest || []).concat(s.lead ? [s.lead] : []).forEach(function (id) { mem[id] = mem[id] || { suggere: 0, porte: 0, projets: [] }; if (id === s.lead) mem[id].porte++; else mem[id].suggere++; if (mem[id].projets.indexOf(p) < 0) mem[id].projets.push(p); });
+      });
+    });
+    DB.subs.forEach(function (s) { if (s.status !== 'no' && s.metier) J(s.metier).interesses.push(s); });
+    var jl = Object.keys(jobs).map(function (k) { var x = jobs[k]; x.ecart = x.projets.length - x.membres.length - x.interesses.filter(function (s) { return s.status === 'new'; }).length; return x; })
+      .filter(function (x) { return x.projets.length || x.membres.length || x.interesses.length; }).sort(function (a, b) { return b.ecart - a.ecart || b.projets.length - a.projets.length; });
+    var ml = DB.members.map(function (m) { return { m: m, d: mem[m.id] || { suggere: 0, porte: 0, projets: [] } }; }).sort(function (a, b) { return (b.d.suggere + b.d.porte) - (a.d.suggere + a.d.porte); });
+    var dep = projs.filter(function (p) { return p.answers; });
+    return { projs: projs, jobs: jl, sides: DB.domains.map(function (d) { return sides[d.id]; }), members: ml, depots: dep };
+  }
+  function bar(v, max, col) { return '<span class="dbar"><i style="width:' + (max ? Math.round(v / max * 100) : 0) + '%;background:' + col + '"></i></span>'; }
+  function aDemande() {
+    var D = demandData(), maxJ = Math.max.apply(null, D.jobs.map(function (x) { return x.projets.length; }).concat([1])), maxS = Math.max.apply(null, D.sides.map(function (s) { return s.open + s.part; }).concat([1]));
+    var gaps = D.jobs.filter(function (x) { return x.ecart > 0; });
+    RERENDER = aDemande;
+    admin('Pilotage', 'Demande et membres', '',
+      '<p class="lead" style="max-width:60ch">Ce que les projets demandent, face à ce que le cercle peut offrir. Plus il y aura de projets déposés et de membres, plus ces chiffres guideront le recrutement et les suggestions.</p>' +
+      '<div class="toolbar"><div class="seg" role="group" aria-label="Projets pris en compte">' + [['sans-marches', 'Projets du cercle et déposés'], ['marches', 'Marchés seulement'], ['tout', 'Tout']].map(function (x) { return '<button type="button" data-act="dmsrc" data-v="' + x[0] + '" aria-pressed="' + (DM.src === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div><span class="small tab">' + D.projs.length + ' projets analysés</span></div>' +
+      '<div class="kpis">' +
+      '<div class="panel kpi"><span class="eyebrow">Métiers demandés</span><strong class="tab">' + D.jobs.filter(function (x) { return x.projets.length; }).length + '</strong><span>par au moins un projet</span></div>' +
+      '<div class="panel kpi kpi--alert"><span class="eyebrow">Métiers sans personne</span><strong class="tab">' + D.jobs.filter(function (x) { return x.projets.length && !x.membres.length && !x.interesses.length; }).length + '</strong><span>à recruter en priorité</span></div>' +
+      '<div class="panel kpi"><span class="eyebrow">Personnes intéressées</span><strong class="tab">' + DB.subs.filter(function (s) { return s.status === 'new'; }).length + '</strong><span>candidatures à traiter</span></div>' +
+      '<div class="panel kpi"><span class="eyebrow">Questionnaires</span><strong class="tab">' + D.depots.length + '</strong><span>projets déposés avec réponses</span></div></div>' +
+
+      '<section class="panel"><div class="panel__h"><div><h2 class="h3">Métiers : demande face aux membres</h2><p class="small">Demande = projets qui ont ce métier en poste ouvert. Écart = demande − membres − candidatures en attente.</p></div></div><div class="tbl"><table><thead><tr><th>Métier</th><th>Sides</th><th style="min-width:160px">Demande</th><th>Membres</th><th>Intéressés</th><th>Écart</th><th></th></tr></thead><tbody>' +
+      D.jobs.slice(0, 30).map(function (x) {
+        return '<tr><td><b>' + esc(x.job) + '</b></td><td class="small tab">' + x.sides.map(function (d) { return pad(d.n); }).join(' · ') + '</td><td><span class="row" style="gap:10px;flex-wrap:nowrap">' + bar(x.projets.length, maxJ, 'var(--s-open)') + '<b class="tab">' + x.projets.length + '</b></span></td>' +
+          '<td class="tab">' + (x.membres.length ? x.membres.map(function (m) { return esc(m.name); }).join(', ') : '<span class="small">aucun</span>') + '</td><td class="tab">' + (x.interesses.length || '<span class="small">—</span>') + '</td>' +
+          '<td><span class="gap gap--' + (x.ecart > 0 ? 'neg' : 'ok') + ' tab">' + (x.ecart > 0 ? '−' + x.ecart : 'OK') + '</span></td>' +
+          '<td><a class="btn btn--line btn--sm" href="../membres.html#job-' + slug(x.job) + '">Membres</a></td></tr>';
+      }).join('') + '</tbody></table></div></section>' +
+
+      '<div class="g2"><section class="panel"><h2 class="h3">Sides les plus demandés</h2><ul class="list">' +
+      D.sides.slice().sort(function (a, b) { return (b.open + b.part) - (a.open + a.part); }).filter(function (s) { return s.open + s.part + s.ok; }).slice(0, 10).map(function (s) {
+        var nm = DB.members.filter(function (m) { return memberDomainsIn(DB, m).indexOf(s.d.id) > -1; }).length;
+        return '<li><span class="grow"><b><span class="num" style="font-size:15px">' + pad(s.d.n) + '</span> ' + esc(s.d.t) + '</b><span class="row" style="gap:10px;margin-top:6px;flex-wrap:nowrap">' + bar(s.open + s.part, maxS, 'var(--s-open)') + '<span class="small tab">' + s.open + ' à pourvoir · ' + s.part + ' en partie · ' + s.ok + ' couverts</span></span></span><span class="small tab">' + nm + ' membre' + (nm > 1 ? 's' : '') + '</span></li>';
+      }).join('') + '</ul></section>' +
+      '<section class="panel"><h2 class="h3">Membres les plus sollicités</h2><p class="small">Suggérés par le moteur ou responsables d’un side.</p><ul class="list">' +
+      D.members.slice(0, 10).map(function (x) { return '<li>' + avatar(x.m) + '<span class="grow"><b>' + esc(x.m.name) + '</b><span class="small" style="display:block">' + esc(x.m.metier) + ' · ' + esc(x.m.type) + '</span></span><span class="small tab">' + x.d.porte + ' porté(s) · ' + x.d.suggere + ' suggéré(s)</span></li>'; }).join('') + '</ul></section></div>' +
+
+      '<div class="g2"><section class="panel"><h2 class="h3">À recruter en priorité</h2><p class="small">Métiers demandés sans membre ni candidature. Partage-les sur Discord ou mets-les en avant sur la page Métiers.</p><div class="chips">' +
+      (gaps.length ? gaps.slice(0, 16).map(function (x) { return '<span class="chip chip--open">' + esc(x.job) + ' · ' + x.projets.length + '</span>'; }).join('') : '<span class="small">Aucun écart : chaque métier demandé a au moins une personne.</span>') + '</div>' + dBtn() + '</section>' +
+      '<section class="panel"><h2 class="h3">Réponses au questionnaire</h2>' + (D.depots.length ? QUESTIONS.map(function (q) {
+        return '<div><p class="lbl" style="margin:8px 0">' + esc(q.t) + '</p>' + q.o.map(function (o) { var n = D.depots.filter(function (p) { return (p.answers[q.k] || []).indexOf(o[0]) > -1; }).length; return '<div class="row" style="gap:10px;flex-wrap:nowrap;margin:4px 0"><span class="small" style="width:46%">' + esc(o[1]) + '</span>' + bar(n, D.depots.length, 'var(--champ)') + '<span class="small tab">' + n + '</span></div>'; }).join('') + '</div>';
+      }).join('') : '<p class="small">Aucun questionnaire rempli pour l’instant. Les réponses des projets déposés s’afficheront ici.</p><a class="btn btn--line btn--sm" href="../deposer.html">Remplir le questionnaire ↗</a>') + '</section></div>');
+  }
+  ACT.dmsrc = function (b) { DM.src = b.dataset.v; aDemande(); };
+
   /* ----- Textes du site ----- */
   var LABELS = { heroTitle: 'Accueil · titre', heroLead: 'Accueil · accroche', heroEyebrow: 'Accueil · sous-titre', manifesto: 'Manifeste', sidesIntro: 'Les sides d’un projet · introduction', quote: 'Citation · première partie', quoteEm: 'Citation · seconde partie', motto: 'Devise du footer' };
   function aContenus() {
@@ -989,7 +1049,7 @@
 
   /* ---------- Démarrage ---------- */
   var PAGES = { home: pHome, sides: pSides, deposer: pDeposer, projets: pProjets, projet: pProjet, metiers: pMetiers, cercle: pCercle, membres: pMembres, rejoindre: pRejoindre,
-    'admin-dash': aDash, 'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages };
+    'admin-dash': aDash, 'admin-demande': aDemande,'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages };
   (PAGES[PAGE] || pHome)();
   window.addEventListener('hashchange', function () {
     if (PAGE === 'projet') pProjet();
