@@ -278,8 +278,8 @@
   function covBar(p) {
     var c = cov(p);
     var cells = DB.domains.filter(function (d) { return (p.sides[d.id] || {}).s && p.sides[d.id].s !== 'na'; })
-      .map(function (d) { return '<i class="' + p.sides[d.id].s + '" title="' + esc(pad(d.n) + ' ' + d.t + ' : ' + ST[p.sides[d.id].s]) + '"></i>'; }).join('');
-    return '<div class="cov"><div class="cov__bar" aria-hidden="true">' + cells + '</div><div class="cov__txt tab"><span>' + c.req + ' sides</span><span>' + c.ok + ' couverts</span>' + (c.part ? '<span>' + c.part + ' en partie</span>' : '') + (c.open ? '<span style="color:var(--s-open)">' + c.open + ' à pourvoir</span>' : '') + '</div></div>';
+      .map(function (d, i) { return '<i class="' + p.sides[d.id].s + '" data-tip-p="' + esc(p.slug) + '" data-tip-d="' + d.id + '" tabindex="0" style="--i:' + i + '" aria-label="' + esc(pad(d.n) + ' ' + d.t + ' : ' + ST[p.sides[d.id].s]) + '"></i>'; }).join('');
+    return '<div class="cov"><div class="cov__bar">' + cells + '</div><div class="cov__txt tab"><span>' + c.req + ' sides</span><span>' + c.ok + ' couverts</span>' + (c.part ? '<span>' + c.part + ' en partie</span>' : '') + (c.open ? '<span style="color:var(--s-open)">' + c.open + ' à pourvoir</span>' : '') + '</div></div>';
   }
   /* Lien Discord : un seul réglage, le même bouton partout */
   function discordUrl() { return DB.settings.discord || window.ACHIRA_DATA.settings.discord; }
@@ -296,8 +296,67 @@
   /* ---------- Actions déléguées ---------- */
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
-  document.addEventListener('click', function (e) { var el = e.target.closest('[data-act]'); if (el && ACT[el.dataset.act]) ACT[el.dataset.act](el, e); });
-  document.addEventListener('change', function (e) { var el = e.target.closest('[data-ch]'); if (el && CH[el.dataset.ch]) CH[el.dataset.ch](el, e); });
+  /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
+  var NO_FLASH = { search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  function selOf(el) {
+    var parts = ['[data-act="' + el.dataset.act + '"]'];
+    ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
+    return parts.join('');
+  }
+  function flash(el) {
+    if (!el) return;
+    var t = el.closest('tr, .srow, .side, .mcard, .list > li, .tlist li, .wr-people li') || el;
+    t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+    setTimeout(function () { t.classList.remove('flash'); }, 1400);
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el || !ACT[el.dataset.act]) return;
+    var act = el.dataset.act, sel = NO_FLASH[act] ? null : selOf(el);
+    ACT[act](el, e);
+    if (sel) setTimeout(function () { flash(document.querySelector(sel) || (document.contains(el) ? el : null)); }, 30);
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target.closest('[data-ch]'); if (!el || !CH[el.dataset.ch]) return;
+    var id = el.id, ch = el.dataset.ch;
+    CH[ch](el, e);
+    if (/^(fd|fp|mj|asec|asort|wsec)$/.test(ch)) return; // simples filtres : pas d'enregistrement
+    setTimeout(function () {
+      var f = (id && document.getElementById(id)) || (document.contains(el) ? el : null); if (!f) return;
+      var row = f.closest('.srow, tr'); if (row) flash(row);
+      f.classList.remove('saved'); void f.offsetWidth; f.classList.add('saved');
+      setTimeout(function () { f.classList.remove('saved'); }, 1600);
+    }, 30);
+  });
+
+  /* Info-bulle des barres de couverture : side, état, responsable, métiers recherchés */
+  function covTip(t) {
+    var p = proj(t.dataset.tipP), d = dom(t.dataset.tipD); if (!p || !d) return '';
+    var s = sideOf(p, d), m = s.lead && mem(s.lead);
+    return '<p class="tip__n">Side ' + pad(d.n) + '</p><b>' + esc(d.t) + '</b>' + st(s.s) +
+      (m ? '<p>' + esc(m.name) + ' · ' + esc(m.metier) + '</p>' : '') +
+      (s.open && s.open.length && s.s !== 'ok' ? '<p class="tip__open">Recherché : ' + s.open.map(esc).join(', ') + '</p>' : '') +
+      (s.s === 'ok' && !m ? '<p>Couvert</p>' : '');
+  }
+  var TIP = null;
+  function showTip(t) {
+    if (!TIP) { TIP = document.createElement('div'); TIP.className = 'tip'; TIP.setAttribute('role', 'tooltip'); document.body.appendChild(TIP); }
+    TIP.innerHTML = covTip(t); TIP.classList.add('on');
+    var r = t.getBoundingClientRect(), w = TIP.offsetWidth, h = TIP.offsetHeight;
+    var x = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)), y = r.top - h - 10;
+    if (y < 8) y = r.bottom + 10;
+    TIP.style.left = x + 'px'; TIP.style.top = y + 'px';
+    $$('.cov__bar i.is-tip').forEach(function (x) { x.classList.remove('is-tip'); }); t.classList.add('is-tip');
+  }
+  function hideTip() { if (TIP) TIP.classList.remove('on'); $$('.cov__bar i.is-tip').forEach(function (x) { x.classList.remove('is-tip'); }); }
+  document.addEventListener('mouseover', function (e) { var t = e.target.closest && e.target.closest('.cov__bar i[data-tip-d]'); if (t) showTip(t); else if (TIP && TIP.classList.contains('on') && !(e.target.closest && e.target.closest('.cov__bar'))) hideTip(); });
+  document.addEventListener('focusin', function (e) { var t = e.target.closest && e.target.closest('.cov__bar i[data-tip-d]'); if (t) showTip(t); else hideTip(); });
+  document.addEventListener('touchstart', function (e) { var t = e.target.closest && e.target.closest('.cov__bar i[data-tip-d]'); if (t) { showTip(t); } else hideTip(); }, { passive: true });
+  window.addEventListener('scroll', hideTip, { passive: true });
+  // au toucher : un premier appui sur un segment affiche l'info-bulle au lieu d'ouvrir la carte du projet
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('.cov__bar i[data-tip-d]');
+    if (t && !t.classList.contains('is-tip')) { e.preventDefault(); showTip(t); }
+  }, true);
   document.addEventListener('input', function (e) { var el = e.target.closest('[data-in]'); if (el && IN[el.dataset.in]) IN[el.dataset.in](el, e); });
 
   /* ---------- Carte mentale ---------- */
