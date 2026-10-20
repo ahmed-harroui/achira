@@ -877,7 +877,8 @@
   ACT.wizsheet = function (b) {
     var open = b.dataset.v === '1', r = $('#wizr'), s = $('#wizshade');
     if (!(window.matchMedia && window.matchMedia('(max-width: 960px)').matches)) { if (open) r.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
-    r.classList.toggle('open', open); s.classList.toggle('on', open); document.body.style.overflow = open ? 'hidden' : '';
+    r.classList.toggle('open', open); s.classList.toggle('on', open); document.body.classList.toggle('sheet-open', open); document.body.style.overflow = open ? 'hidden' : '';
+    if (open) r.scrollTop = 0;
   };
   ACT.wopt = function (b) {
     var q = QUESTIONS.find(function (x) { return x.k === b.dataset.q; }), v = b.dataset.v, cur = WA[q.k], i = cur.indexOf(v);

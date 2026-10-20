@@ -427,6 +427,7 @@ a.chip:hover { border-color: var(--ivory); }
 .wr-tag--new { background: var(--champ); color: var(--ink); }
 .wr-tag--up { border: 1px solid var(--champ); color: var(--champ); }
 .chip.is-new { box-shadow: 0 0 0 2px var(--champ); }
+.wr-sides li div > .wr-tag, .wr-people li div .wr-tag { justify-self: start; margin-left: 0; margin-top: 2px; }
 @media (prefers-reduced-motion: no-preference) {
   .wr-change { animation: wcin .5s var(--ease); }
   .wr-sides li.is-new, .wr-people li.is-new, .chip.is-new { animation: glow 2.2s var(--ease); }
@@ -496,7 +497,7 @@ button:disabled { opacity: .6; cursor: wait; }
    Les sections « bord » passent en beige (papier ivoire d'AKARBI, texte encre) ;
    le bordeaux reste pour l'accueil, les accents et les boutons d'action.
    ===================================================================== */
-:root { --sand: #e3d6bd; --ink3: #5d6b65; --paper-line: rgba(16,35,29,.14); --ok-ink: #2f6b52; }
+:root { --paper: #f1e8d6; --sand: #e3d6bd; --ink3: #5d6b65; --paper-line: rgba(16,35,29,.14); --ok-ink: #2f6b52; }
 .bord { background: var(--paper); color: var(--ink); }
 .phero { background: radial-gradient(60% 80% at 92% 0%, rgba(127,11,31,.42), transparent 70%), radial-gradient(70% 90% at 0% 100%, rgba(23,58,48,.55), transparent 70%), #0d0a0b; }
 .hero { background: radial-gradient(70% 60% at 50% 25%, rgba(127,11,31,.55) 0%, rgba(22,4,10,.6) 55%, transparent 100%), radial-gradient(80% 60% at 50% 100%, rgba(23,58,48,.5), transparent 70%), #0a0708; }
@@ -576,8 +577,12 @@ button:disabled { opacity: .6; cursor: wait; }
   .dp--dim { opacity: .4; border-style: dashed; }
   .dp.is-new { box-shadow: 0 0 0 2px var(--champ), 0 0 14px rgba(197,166,118,.7); }
   .wiz__dock-go { flex: none; padding: 10px 12px; border-radius: 999px; background: var(--ivory); color: var(--ink); font: 700 12px/1 var(--sans); }
-  .wiz__r { position: fixed !important; left: 0; right: 0; bottom: 0; z-index: 80; max-height: 82vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .45s var(--ease); box-shadow: 0 -20px 40px rgba(0,0,0,.5); }
-  .wiz__r.open { transform: none; }
+  .wiz__r { position: fixed !important; top: auto !important; left: 0; right: 0; bottom: 0; z-index: 80; visibility: hidden; max-height: 82vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .45s var(--ease); box-shadow: 0 -20px 40px rgba(0,0,0,.5); }
+  .wiz__r.open { transform: none; visibility: visible; }
+  .wiz__r { transition: transform .45s var(--ease), visibility 0s linear .45s; }
+  .wiz__r.open { transition: transform .45s var(--ease), visibility 0s; }
+  body.sheet-open .wiz__dock { transform: translateY(110%); }
+  .wiz__dock { transition: transform .35s var(--ease); }
   .wiz__sheet-close { display: block; justify-self: center; width: 54px; height: 6px; border-radius: 3px; background: var(--iv30); margin: -6px auto 6px; }
   .wiz__shade { position: fixed; inset: 0; z-index: 79; background: rgba(5,1,2,.55); opacity: 0; pointer-events: none; transition: opacity .3s; }
   .wiz__shade.on { opacity: 1; pointer-events: auto; }
