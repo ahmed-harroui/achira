@@ -150,7 +150,93 @@
     return sides;
   }
   var DB = load();
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} }
+  function save() {
+    if (ONLINE) { if (PAGE.indexOf('admin-') === 0) scheduleSync(); return; }
+    try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {}
+  }
+
+  /* ================= BASE SUPABASE ================= */
+  var CFG = window.ACHIRA_CONFIG, SB = null;
+  try { if (CFG && window.supabase) SB = window.supabase.createClient(CFG.url, CFG.anonKey); } catch (e) {}
+  var ONLINE = !!SB, SNAP = {}, syncTimer = null;
+  function rowToProject(r) {
+    return { slug: r.slug, title: r.title, sub: r.sub || '', disc: r.disc || '', place: r.place || '', year: r.year || '', phase: r.phase || 'Idée', status: r.status || 'pub', featured: !!r.featured, img: r.img || 'u-cercle-2', story: r.story || '',
+      achira: !!r.achira, specialite: r.specialite || '', origin: r.origin === 'depot' ? 'depot' : undefined, sides: r.sides || {}, answers: r.answers || undefined, market: r.market || undefined,
+      submitter: r.submitter ? Object.assign({ when: r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '' }, r.submitter) : undefined };
+  }
+  function projectToRow(p) {
+    return { slug: p.slug, title: p.title, sub: p.sub || '', disc: p.disc || '', place: p.place || '', year: parseInt(p.year, 10) || null, phase: p.phase, status: p.status, featured: !!p.featured, img: p.img, story: p.story || '',
+      achira: !!p.achira, specialite: p.specialite || '', origin: p.market ? 'marche' : p.origin === 'depot' ? 'depot' : 'cercle', sides: p.sides || {}, answers: p.answers || null, market: p.market || null,
+      submitter: p.submitter ? { name: p.submitter.name, email: p.submitter.email } : null };
+  }
+  function rowToMember(r) { return { id: r.id, slug: r.slug, name: r.name, metier: r.metier, type: r.type || '', city: r.city || '', bio: r.bio || '', domains: r.domains || [], img: r.img || '', email: r.email || '' }; }
+  function memberToRow(m) {
+    var j = window.ACHIRA_ARBRE.jobs.find(function (x) { return norm(x.label) === norm(m.metier); });
+    return { id: m.id, slug: m.slug || slug(m.name), name: m.name, metier: m.metier, job_id: j ? j.id : null, type: DB.pros.indexOf(m.type) > -1 ? m.type : null, city: m.city || '', bio: m.bio || '', domains: m.domains || [], img: m.img || null };
+  }
+  function rowToSub(r) { return { id: r.id, name: r.name, email: r.email, metier: r.metier, type: r.type || '', project: r.project || '', domain: r.domain || '', link: r.link || '', msg: r.msg || '', status: r.status, notes: r.notes || '', when: new Date(r.created_at).toLocaleDateString('fr-FR') }; }
+  function subToRow(s) { return { id: s.id, name: s.name, email: s.email, metier: s.metier, type: s.type || null, project: s.project || null, domain: s.domain || null, link: s.link || null, msg: s.msg || null, status: s.status, notes: s.notes || null }; }
+  var COLL = { projects: ['projects', 'slug', projectToRow], members: ['members', 'id', memberToRow], subs: ['submissions', 'id', subToRow] };
+  function snapshot() {
+    SNAP = {};
+    Object.keys(COLL).forEach(function (c) { var k = COLL[c][1]; SNAP[c] = {}; DB[c].forEach(function (x) { SNAP[c][x[k]] = JSON.stringify(COLL[c][2](x)); }); });
+    SNAP.content = JSON.stringify(DB.content); SNAP.settings = JSON.stringify(DB.settings); SNAP.domains = JSON.stringify(DB.domains);
+  }
+  function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(sync, 400); }
+  async function sync() {
+    var errors = [];
+    for (var c of Object.keys(COLL)) {
+      var t = COLL[c][0], k = COLL[c][1], f = COLL[c][2], seen = {}, up = [];
+      DB[c].forEach(function (x) { var row = f(x), s = JSON.stringify(row); seen[x[k]] = 1; if (SNAP[c][x[k]] !== s) up.push(row); });
+      var del = Object.keys(SNAP[c]).filter(function (id) { return !seen[id]; });
+      if (up.length) { var r1 = await SB.from(t).upsert(up, { onConflict: k }); if (r1.error) errors.push(r1.error.message); }
+      for (var id of del) { var r2 = await SB.from(t).delete().eq(k, id); if (r2.error) errors.push(r2.error.message); }
+    }
+    var kv = [];
+    if (JSON.stringify(DB.content) !== SNAP.content) kv.push({ key: 'content', value: DB.content });
+    if (JSON.stringify(DB.settings) !== SNAP.settings) kv.push({ key: 'settings', value: DB.settings });
+    if (JSON.stringify(DB.domains) !== SNAP.domains) kv.push({ key: 'domains', value: DB.domains });
+    if (kv.length) { var r3 = await SB.from('site_content').upsert(kv, { onConflict: 'key' }); if (r3.error) errors.push(r3.error.message); }
+    if (errors.length) toast('Erreur d’enregistrement : ' + errors[0]); else snapshot();
+  }
+  function applyContent(rows) {
+    (rows || []).forEach(function (r) {
+      if (r.key === 'content') Object.assign(DB.content, r.value);
+      if (r.key === 'settings') Object.assign(DB.settings, r.value);
+      if (r.key === 'domains' && Array.isArray(r.value) && r.value.length) { DB.domains = r.value; DB.poles = treePoles(DB.domains); }
+    });
+  }
+  async function loadPublic() {
+    var res = await Promise.all([SB.rpc('public_projects'), SB.rpc('public_members'), SB.from('site_content').select('key,value')]);
+    if (res[0].error || res[1].error) throw new Error((res[0].error || res[1].error).message);
+    DB.projects = res[0].data.map(function (r) { var p = rowToProject(r); p.status = 'pub'; return p; });
+    DB.members = res[1].data.map(rowToMember); DB.subs = [];
+    applyContent(res[2].data);
+  }
+  async function loadAdmin() {
+    var res = await Promise.all([SB.from('projects').select('*').order('created_at'), SB.from('members').select('*').order('id'), SB.from('submissions').select('*').order('created_at', { ascending: false }), SB.from('site_content').select('key,value')]);
+    var err = res.find(function (r) { return r.error; });
+    if (err) throw new Error(err.error.message);
+    if (!res[0].data.length) throw new Error('Ce compte n’a pas les droits d’administration.');
+    DB.projects = res[0].data.map(rowToProject).sort(function (a, b) { return (a.origin === 'depot' ? 0 : 1) - (b.origin === 'depot' ? 0 : 1); });
+    DB.members = res[1].data.map(rowToMember); DB.subs = res[2].data.map(rowToSub);
+    applyContent(res[3].data);
+    snapshot();
+  }
+  function loginView(msg) {
+    APP.innerHTML = '<div class="login"><form class="login__box" id="login" novalidate><div class="adm-logo" style="padding:0">' + LOGO + '<span><b>ACHIRA</b><small>Dashboard</small></span></div>' +
+      '<h1 class="h3">Connexion</h1><p class="small">Réservée aux administrateurs du cercle.</p>' +
+      '<div class="field"><label for="l-email">E-mail</label><input type="email" id="l-email" autocomplete="username" required></div>' +
+      '<div class="field"><label for="l-pass">Mot de passe</label><input type="password" id="l-pass" autocomplete="current-password" required></div>' +
+      '<p class="small" id="l-err" role="alert" style="color:#f3a3b1">' + esc(msg || '') + '</p><button class="btn btn--bord" type="submit">Se connecter</button><a class="link" href="../index.html">Retour au site <span>→</span></a></form></div>';
+    $('#login').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var b = this.querySelector('button'); b.disabled = true; b.textContent = 'Connexion…';
+      var r = await SB.auth.signInWithPassword({ email: $('#l-email').value.trim(), password: $('#l-pass').value });
+      if (r.error) { b.disabled = false; b.textContent = 'Se connecter'; $('#l-err').textContent = 'E-mail ou mot de passe incorrect.'; return; }
+      boot();
+    });
+  }
 
   var ST = { ok: 'Couvert', part: 'En partie', open: 'À pourvoir', na: 'Non requis' };
   var PUB = { pub: 'Publié', draft: 'Brouillon', arch: 'Archivé' };
@@ -597,11 +683,22 @@
     if (!answered()) { $('#w-err').textContent = 'Réponds à au moins une question pour que le cercle sache quels sides ton projet touche.'; return; }
     var r = wizResult(), base = slug(v('w-title')), sl = base, n = 2;
     while (proj(sl)) sl = base + '-' + n++;
-    DB.projects.unshift({ slug: sl, title: v('w-title'), sub: v('w-desc').slice(0, 120), disc: WA.secteur || 'À préciser', place: v('w-city'), year: new Date().getFullYear(), phase: { idee: 'Idée', lancement: 'Lancement', activite: 'Production' }[WA.stade[0]] || 'Idée',
+    if (ONLINE) sl = base + '-' + Math.random().toString(36).slice(2, 7);
+    var p = { slug: sl, title: v('w-title'), sub: v('w-desc').slice(0, 120), disc: WA.secteur || 'À préciser', place: v('w-city'), year: new Date().getFullYear(), phase: { idee: 'Idée', lancement: 'Lancement', activite: 'Production' }[WA.stade[0]] || 'Idée',
       status: 'draft', featured: false, img: 'u-cercle-2', story: v('w-desc'), achira: false, specialite: '', origin: 'depot',
-      submitter: { name: v('w-name'), email: v('w-email'), when: new Date().toLocaleDateString('fr-FR') }, answers: JSON.parse(JSON.stringify(WA)), sides: suggestedSides(r, DB) });
-    save();
-    $('#wizf').outerHTML = '<div class="notice wq"><h3 class="h3">Merci ' + esc(v('w-name')) + '.</h3><p style="margin-top:8px">Ton projet « ' + esc(v('w-title')) + ' » est arrivé dans la dashboard avec ' + r.list.filter(function (x) { return x.score >= 3; }).length + ' sides à pourvoir et ' + Math.min(r.members.length, 5) + ' personnes suggérées. <a class="link" href="admin/projet.html#' + sl + '">Le voir dans la dashboard <span>→</span></a></p></div>';
+      submitter: { name: v('w-name'), email: v('w-email'), when: new Date().toLocaleDateString('fr-FR') }, answers: JSON.parse(JSON.stringify(WA)), sides: suggestedSides(r, DB) };
+    var nSides = r.list.filter(function (x) { return x.score >= 3; }).length, nPpl = Math.min(r.members.length, 5);
+    function done(extra) { $('#wizf').outerHTML = '<div class="notice wq"><h3 class="h3">Merci ' + esc(v('w-name')) + '.</h3><p style="margin-top:8px">Ton projet « ' + esc(v('w-title')) + ' » est bien arrivé au cercle, avec ' + nSides + ' sides à pourvoir et ' + nPpl + ' personnes suggérées. ' + extra + '</p></div>'; }
+    if (ONLINE) {
+      var btn = $('#wizf button[type=submit]'); btn.disabled = true; btn.textContent = 'Envoi…';
+      SB.from('projects').insert(projectToRow(p)).then(function (res) {
+        if (res.error) { btn.disabled = false; btn.textContent = 'Envoyer mon projet au cercle'; $('#w-err').textContent = 'L’envoi n’a pas abouti. Réessaie dans un instant ou écris-nous sur Discord.'; return; }
+        done('Le cercle revient vers toi par e-mail.');
+      });
+      return;
+    }
+    DB.projects.unshift(p); save();
+    done('<a class="link" href="admin/projet.html#' + sl + '">Le voir dans la dashboard <span>→</span></a>');
   }
 
   /* ----- Rejoindre ----- */
@@ -632,9 +729,19 @@
       e.preventDefault();
       var v = function (id) { return $('#' + id).value.trim(); };
       if (!v('j-name') || !v('j-email') || !v('j-metier')) { $('#j-err').textContent = 'Indique ton nom, ton e-mail et ton métier pour envoyer ta proposition.'; return; }
-      DB.subs.unshift({ id: Date.now(), name: v('j-name'), email: v('j-email'), metier: v('j-metier'), type: v('j-type'), project: v('j-proj'), domain: v('j-dom'), link: v('j-link'), msg: v('j-msg'), when: 'à l’instant', status: 'new' });
-      save();
-      $('#join').outerHTML = '<div class="notice full"><h3 class="h3">Merci ' + esc(v('j-name')) + '.</h3><p style="margin-top:8px">Ta proposition est bien arrivée. Dans cette maquette, elle apparaît maintenant dans la <a class="link" href="admin/candidatures.html">dashboard <span>→</span></a></p></div>';
+      var sub = { id: Date.now(), name: v('j-name'), email: v('j-email'), metier: v('j-metier'), type: v('j-type'), project: v('j-proj'), domain: v('j-dom'), link: v('j-link'), msg: v('j-msg'), when: 'à l’instant', status: 'new' };
+      var thanks = function (extra) { $('#join').outerHTML = '<div class="notice full"><h3 class="h3">Merci ' + esc(v('j-name')) + '.</h3><p style="margin-top:8px">Ta proposition est bien arrivée. ' + extra + '</p></div>'; };
+      if (ONLINE) {
+        var row = subToRow(sub); delete row.id; delete row.notes;
+        var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Envoi…';
+        SB.from('submissions').insert(row).then(function (res) {
+          if (res.error) { btn.disabled = false; btn.textContent = 'Envoyer ma proposition'; $('#j-err').textContent = 'L’envoi n’a pas abouti. Réessaie dans un instant ou écris-nous sur Discord.'; return; }
+          thanks('Le cercle lit chaque proposition et revient vers toi par e-mail.');
+        });
+        return;
+      }
+      DB.subs.unshift(sub); save();
+      thanks('Dans cette maquette, elle apparaît maintenant dans la <a class="link" href="admin/candidatures.html">dashboard <span>→</span></a>');
     });
   }
 
@@ -650,7 +757,8 @@
         var b = a[2] === 'admin-candidatures' && newSubs() ? '<span class="badge">' + newSubs() + '</span>' : '';
         return '<a href="' + a[0] + '"' + (cur === a[2] ? ' aria-current="page"' : '') + '><span>' + a[1] + '</span>' + b + '</a>';
       }).join('') + '<a href="../index.html"><span>Voir le site ↗</span></a></nav>' +
-      '<div class="adm-foot"><div class="adm-user"><span class="av">A</span><div>Ahmed<span>Admin</span></div></div><p class="small" style="font-size:11px;color:var(--champ)">Maquette · modifications gardées dans ce navigateur</p></div></aside>' +
+      '<div class="adm-foot"><div class="adm-user"><span class="av">' + esc((ADMIN_EMAIL || 'A')[0].toUpperCase()) + '</span><div>' + esc(ADMIN_EMAIL || 'Ahmed') + '<span>Admin</span></div></div>' +
+      (ONLINE ? '<p class="small" style="font-size:11px;color:var(--s-ok)">Connecté à la base · enregistrement automatique</p><button class="btn btn--line btn--sm" data-act="logout">Se déconnecter</button>' : '<p class="small" style="font-size:11px;color:var(--champ)">Maquette · modifications gardées dans ce navigateur</p>') + '</div></aside>' +
       '<main class="adm-main" id="view"><div class="adm-top"><div><p class="eyebrow">' + eb + '</p><h1 class="h1">' + title + '</h1></div><div class="row">' + (actions || '') + '</div></div>' + body + '</main></div>';
   }
 
@@ -1039,7 +1147,10 @@
       '<div class="field"><label for="r-dc">Lien d’invitation Discord</label><input type="text" id="r-dc" data-ch="rs" data-k="discord" value="' + esc(discordUrl()) + '"><span class="small">Utilisé partout sur le site : footer, menu, accueil, cercle, sides, métiers, rejoindre.</span></div></section>' +
       '<section class="panel"><h2 class="h3">Profils professionnels</h2><p class="small">Proposés pour chaque métier, dans les candidatures et sur le site.</p><div class="chips">' + DB.pros.map(function (p) { return '<span class="chip">' + p + '</span>'; }).join('') + '</div>' +
       '<h2 class="h3" style="margin-top:8px">Utilisateurs</h2><ul class="list"><li><span class="grow"><b>Ahmed</b><br><span class="small">Admin</span></span></li><li><span class="grow"><b>Éditeur</b><br><span class="small">Peut modifier les projets et les textes</span></span><span class="st st--draft">Invitation à envoyer</span></li></ul></section></div>' +
-      '<section class="panel"><h2 class="h3">Données de la maquette</h2><p class="body">Tes modifications sont gardées dans ce navigateur. Tu peux revenir aux données d’exemple à tout moment.</p><div><button class="btn btn--line" data-act="reset">Revenir aux données d’exemple</button></div></section>');
+      (ONLINE
+        ? '<div class="g2 g2--even"><section class="panel"><h2 class="h3">Mon mot de passe</h2><div class="field"><label for="r-pw">Nouveau mot de passe (10 caractères minimum)</label><input type="password" id="r-pw" autocomplete="new-password"></div><p class="small" id="r-pw-msg" role="status"></p><div><button class="btn btn--bord" data-act="setpw">Changer mon mot de passe</button></div></section>' +
+          '<section class="panel"><h2 class="h3">Données</h2><p class="body">Tout est enregistré dans la base Supabase du projet Achira, automatiquement, à chaque modification.</p><div><button class="btn btn--line" data-act="reload">Recharger depuis la base</button></div></section></div>'
+        : '<section class="panel"><h2 class="h3">Données de la maquette</h2><p class="body">Tes modifications sont gardées dans ce navigateur. Tu peux revenir aux données d’exemple à tout moment.</p><div><button class="btn btn--line" data-act="reset">Revenir aux données d’exemple</button></div></section>'));
   }
   CH.rs = function (el) { DB.settings[el.dataset.k] = el.value; save(); toast('Réglage enregistré'); };
   ACT.reset = function (b) {
@@ -1050,7 +1161,35 @@
   /* ---------- Démarrage ---------- */
   var PAGES = { home: pHome, sides: pSides, deposer: pDeposer, projets: pProjets, projet: pProjet, metiers: pMetiers, cercle: pCercle, membres: pMembres, rejoindre: pRejoindre,
     'admin-dash': aDash, 'admin-demande': aDemande,'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages };
-  (PAGES[PAGE] || pHome)();
+  ACT.logout = async function () { await SB.auth.signOut(); loginView('Tu es déconnecté.'); };
+  ACT.reload = async function () { try { await loadAdmin(); RERENDER(); toast('Données rechargées depuis la base'); } catch (e) { toast(e.message); } };
+  ACT.setpw = async function () {
+    var pw = $('#r-pw').value, out = $('#r-pw-msg');
+    if (pw.length < 10) { out.textContent = 'Choisis au moins 10 caractères.'; return; }
+    var r = await SB.auth.updateUser({ password: pw });
+    out.textContent = r.error ? 'Échec : ' + r.error.message : 'Mot de passe changé.'; if (!r.error) $('#r-pw').value = '';
+  };
+
+  /* ---------- Démarrage : données de la base si elle est configurée, sinon maquette locale ---------- */
+  var ADMIN_EMAIL = '';
+  function start() { (PAGES[PAGE] || pHome)(); }
+  async function boot() {
+    if (!ONLINE) return start();
+    try {
+      if (PAGE.indexOf('admin-') === 0) {
+        var s = await SB.auth.getSession();
+        if (!s.data.session) return loginView();
+        ADMIN_EMAIL = s.data.session.user.email || '';
+        APP.innerHTML = '<div class="login"><p class="small">Chargement des données…</p></div>';
+        await loadAdmin();
+      } else await loadPublic();
+    } catch (e) {
+      if (PAGE.indexOf('admin-') === 0) { await SB.auth.signOut(); return loginView(e.message); }
+      ONLINE = false; // base injoignable : le site public s'affiche avec ses données de démonstration
+    }
+    start();
+  }
+  boot();
   window.addEventListener('hashchange', function () {
     if (PAGE === 'projet') pProjet();
     else if (PAGE === 'admin-projet') aProjet();

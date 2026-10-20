@@ -105,8 +105,27 @@ alter table public.site_content enable row level security;
 create policy "textes: lecture publique" on public.site_content for select using (true);
 create policy "textes: écriture admin" on public.site_content for all using (public.is_admin()) with check (public.is_admin());
 
+-- ---------- Lecture publique par fonctions (plus robustes que des vues « security definer ») ----------
+-- Les vues ci-dessus restent pour l'administration ; le site public appelle ces deux fonctions.
+drop view if exists public.projects_public;
+drop view if exists public.members_public;
+
+create or replace function public.public_projects() returns setof jsonb
+language sql stable security definer set search_path = public as $$
+  select (to_jsonb(p) - 'submitter' - 'answers' - 'market')
+         || jsonb_build_object('market', case when p.market is null then null else p.market - 'contact' end)
+  from public.projects p where p.status = 'pub';
+$$;
+
+create or replace function public.public_members() returns setof jsonb
+language sql stable security definer set search_path = public as $$
+  select to_jsonb(m) - 'email' - 'visible' from public.members m where m.visible;
+$$;
+
+revoke execute on function public.public_projects(), public.public_members() from public;
+grant execute on function public.public_projects(), public.public_members() to anon, authenticated;
+
 -- ---------- Droits ----------
-grant select on public.members_public, public.projects_public to anon, authenticated;
 grant insert on public.projects, public.submissions to anon, authenticated;
 revoke select on public.projects, public.submissions, public.members from anon;
 

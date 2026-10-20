@@ -350,6 +350,12 @@ a.chip:hover { border-color: var(--ivory); }
 .gap { font: 400 18px/1 var(--brand); letter-spacing: .04em; }
 .gap--neg { color: var(--s-open); } .gap--ok { color: var(--s-ok); }
 
+/* ---------- Connexion dashboard ---------- */
+.login { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: radial-gradient(90% 70% at 50% 20%, #3b0a17 0%, #16040a 60%, #0a0205 100%); }
+.login__box { width: min(420px, 100%); display: grid; gap: 16px; padding: clamp(24px, 4vw, 36px); border-radius: 18px; background: var(--panel); border: 1px solid var(--iv30); }
+.login__box .btn { width: 100%; }
+button:disabled { opacity: .6; cursor: wait; }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }
