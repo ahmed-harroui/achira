@@ -12,29 +12,142 @@
   var LOGO = '<svg aria-hidden="true" focusable="false" viewBox="0 0 376.2 404.1" fill="currentColor"><path d="M0.1,253.8 L0.1,325.5 L22.4,309.0 L22.4,272.0 L56.4,272.0 L56.4,236.5 L110.6,277.2 L110.6,282.0 L93.4,293.5 L93.4,321.5 L68.9,321.5 L65.9,324.2 L65.9,383.8 L85.1,404.1 L88.5,404.1 L88.5,342.2 L113.1,339.5 L113.1,303.5 L127.1,291.2 L160.5,315.5 L160.5,356.0 L182.4,373.8 L182.4,308.8 L55.4,210.0 L35.9,223.8 L35.9,253.8 Z M181.9,42.5 L160.4,61.0 L160.4,92.5 L128.1,116.5 L112.9,103.0 L112.9,63.5 L87.4,60.8 L87.4,0.0 L65.9,22.2 L65.9,80.8 L93.2,80.8 L93.2,111.5 L112.1,126.2 L112.1,129.8 L56.2,173.8 L56.2,133.0 L22.4,133.0 L22.4,100.2 L0.0,83.2 L0.0,152.5 L35.6,152.5 L35.6,185.8 L55.6,199.5 L181.9,97.8 Z M376.1,253.8 L376.1,325.5 L353.9,309.0 L353.9,272.0 L319.9,272.0 L319.9,236.5 L265.6,277.2 L265.6,282.0 L282.9,293.5 L282.9,321.5 L307.4,321.5 L310.4,324.2 L310.4,383.8 L291.1,404.1 L287.8,404.1 L287.8,342.2 L263.1,339.5 L263.1,303.5 L249.1,291.2 L215.8,315.5 L215.8,356.0 L193.9,373.8 L193.9,308.8 L320.9,210.0 L340.4,223.8 L340.4,253.8 Z M194.4,42.5 L215.9,61.0 L215.9,92.5 L248.1,116.5 L263.4,103.0 L263.4,63.5 L288.9,60.8 L288.9,0.0 L310.4,22.2 L310.4,80.8 L283.0,80.8 L283.0,111.5 L264.1,126.2 L264.1,129.8 L320.0,173.8 L320.0,133.0 L353.9,133.0 L353.9,100.2 L376.2,83.2 L376.2,152.5 L340.6,152.5 L340.6,185.8 L320.6,199.5 L194.4,97.8 Z"/></svg>';
 
   /* ---------- Données ---------- */
-  /* Un marché du plan d'action devient un projet en brouillon, avec ses sides à pourvoir */
-  var BRANDING = /brand|identit|packaging|naming|portfolio|vid[eé]o|marque/i;
-  function marketProject(m, i) {
-    var sides = {
-      d15: { s: 'open', open: [m.respDecouverte, m.respDistribution].filter(function (x, j, a) { return x && a.indexOf(x) === j; }) },
-      d16: { s: 'open', open: [m.respProduit] }
-    };
-    if (BRANDING.test(m.solution)) sides.d13 = { s: 'open', open: ['Designer'] };
+  /* L'arbre des métiers et domaines (arbre.js) est la source du modèle des sides */
+  var TREE_V = 'arbre-ma-1.0';
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function treeDomains() {
+    var T = window.ACHIRA_ARBRE, lab = {};
+    T.skills.concat(T.jobs).forEach(function (x) { lab[x.id] = x; });
+    return T.domains.map(function (d, i) {
+      var rel = T.relations.filter(function (r) { return r.from === d.id; });
+      return { id: 'd' + (i + 1), ref: d.id, sector: d.parent_id, n: i + 1, t: d.label, tasks: d.tasks.map(function (t) { return t.label; }),
+        comp: rel.filter(function (r) { return r.type === 'REQUIRES_SKILL'; }).map(function (r) { return lab[r.to].label; }),
+        metiers: rel.filter(function (r) { return r.type === 'PERFORMED_BY'; }).map(function (r) { return lab[r.to].label; }) };
+    });
+  }
+  function treePoles(domains) {
+    return window.ACHIRA_ARBRE.sectors.map(function (s) {
+      return { id: s.id === 'sector-finance' ? 'gestion' : 'creation', ref: s.id, t: s.label, d: domains.filter(function (d) { return d.sector === s.id; }).map(function (d) { return d.id; }) };
+    });
+  }
+  function applyTree(db) {
+    db.domains = treeDomains(); db.poles = treePoles(db.domains);
+    db.pros = window.ACHIRA_ARBRE.jobs[0].engagement_modes.map(cap);
+    window.ACHIRA_DATA.members.forEach(function (m) { if (!db.members.some(function (x) { return x.id === m.id; })) db.members.push(JSON.parse(JSON.stringify(m))); });
+    db.treeVersion = TREE_V;
+    return db;
+  }
+
+  /* Un marché du plan d'action devient un projet en brouillon ; ses sides viennent du moteur de suggestions */
+  function marketProject(m, i, db) {
     return { slug: m.id.toLowerCase(), title: m.micro, sub: m.nano, disc: m.sector, place: m.city, year: 2026, phase: 'Idée', status: 'draft', featured: false,
       img: ['u-cercle-1', 'u-cercle-2', 'u-cercle-3', 'poster-achira', 'end-achira'][i % 5], story: m.probleme + '. Hypothèse : ' + m.hypothesis.toLowerCase() + '.',
-      achira: false, specialite: '', market: JSON.parse(JSON.stringify(m)), sides: sides };
+      achira: false, specialite: '', market: JSON.parse(JSON.stringify(m)), sides: suggestedSides(analyzeMarket(m, db), db) };
   }
   function addMarkets(db) {
-    (window.ACHIRA_MARCHES || []).forEach(function (m, i) { if (!db.projects.some(function (p) { return p.slug === m.id.toLowerCase(); })) db.projects.push(marketProject(m, i)); });
+    (window.ACHIRA_MARCHES || []).forEach(function (m, i) { if (!db.projects.some(function (p) { return p.slug === m.id.toLowerCase(); })) db.projects.push(marketProject(m, i, db)); });
     db.projects.forEach(function (p) { if (p.achira === undefined) p.achira = !p.market; if (p.specialite === undefined) p.specialite = ''; });
     if (!db.settings.discord) db.settings.discord = window.ACHIRA_DATA.settings.discord;
     db.marketsVersion = MARKETS_V;
     return db;
   }
-  function fresh() { return addMarkets(JSON.parse(JSON.stringify(window.ACHIRA_DATA))); }
+  function fresh() { return addMarkets(applyTree(JSON.parse(JSON.stringify(window.ACHIRA_DATA)))); }
   function load() {
-    try { var s = localStorage.getItem(KEY); if (s) { var db = JSON.parse(s); return db.marketsVersion === MARKETS_V ? db : addMarkets(db); } } catch (e) {}
+    try {
+      var s = localStorage.getItem(KEY);
+      if (s) {
+        var db = JSON.parse(s);
+        if (db.treeVersion !== TREE_V) {
+          applyTree(db);
+          // les marchés encore en brouillon reprennent les sides calculés avec le nouvel arbre
+          db.projects.forEach(function (p) { if (p.market && p.status === 'draft') p.sides = suggestedSides(analyzeMarket(p.market, db), db); });
+        }
+        return db.marketsVersion === MARKETS_V ? db : addMarkets(db);
+      }
+    } catch (e) {}
     return fresh();
+  }
+
+  /* ================= MOTEUR : projet → sides touchés → métiers → membres ================= */
+  var QUESTIONS = [
+    { k: 'stade', t: 'Où en est ton projet ?', o: [
+      ['idee', 'C’est une idée', { d12: [3, 'Business plan et prévisionnel'], d7: [2, 'Choix de la structure juridique'], d4: [2, 'Plan de financement initial'] }],
+      ['lancement', 'Je lance l’activité', { d7: [3, 'Création de l’entreprise'], d1: [2, 'Tenue des comptes dès le départ'], d3: [2, 'TVA et premières déclarations'], d5: [2, 'Premiers devis et factures'] }],
+      ['activite', 'L’activité tourne déjà', { d2: [3, 'Marges et coûts de revient'], d4: [2, 'Plan de trésorerie'], d8: [2, 'Contrôle interne'], d11: [1, 'Risques financiers'] }]] },
+    { k: 'offre', multi: true, t: 'Qu’est-ce que tu proposes ?', o: [
+      ['produit', 'Des produits fabriqués ou vendus', { d14: [3, 'Fabrication, stocks et livraison'], d10: [2, 'Achats et fournisseurs'], d13: [2, 'Design produit et packaging'] }],
+      ['service', 'Des services', { d5: [2, 'Devis et facturation des prestations'], d15: [1, 'Faire connaître l’offre'] }],
+      ['lieu', 'Un lieu qui accueille du public', { d16: [2, 'Réservations en ligne'], d15: [2, 'Visibilité locale'], d6: [1, 'Équipe sur place'] }],
+      ['digital', 'Un outil numérique ou un logiciel', { d16: [3, 'Développement et hébergement'], d9: [2, 'Outils et automatisation'] }]] },
+    { k: 'clients', multi: true, t: 'Qui sont tes clients ?', o: [
+      ['b2c', 'Des particuliers', { d15: [3, 'Marque et réseaux sociaux'], d16: [2, 'Paiement en ligne'] }],
+      ['b2b', 'Des entreprises', { d5: [3, 'Devis, conditions de paiement, relances'], d7: [2, 'Contrats clients'] }],
+      ['intl', 'Des clients à l’étranger ou des touristes', { d3: [2, 'Fiscalité internationale'], d11: [2, 'Risque de change'], d15: [1, 'Communication multilingue'] }]] },
+    { k: 'equipe', t: 'Comment travailles-tu ?', o: [
+      ['seul', 'Seul pour l’instant', {}],
+      ['freelances', 'Avec des indépendants', { d7: [2, 'Contrats de prestation'] }],
+      ['salaries', 'Avec des salariés', { d6: [3, 'Paie et charges sociales'], d7: [1, 'Contrats de travail'] }]] },
+    { k: 'argent', multi: true, t: 'Côté argent, de quoi as-tu besoin ?', o: [
+      ['financer', 'Trouver un financement', { d4: [3, 'Financement bancaire'], d12: [3, 'Subventions et plan de financement'] }],
+      ['encaisser', 'Facturer et encaisser', { d5: [3, 'Émission des factures'], d16: [1, 'Paiement en ligne'] }],
+      ['acheter', 'Acheter du matériel ou des stocks', { d10: [3, 'Commandes et contrôle des factures'], d4: [1, 'Besoin en fonds de roulement'] }],
+      ['regle', 'Rester en règle', { d3: [3, 'Déclarations fiscales'], d1: [2, 'Comptes justifiés'], d8: [2, 'Conformité réglementaire'] }]] },
+    { k: 'image', multi: true, t: 'Et pour te faire connaître ?', o: [
+      ['marque', 'Une identité, une marque', { d13: [3, 'Identité visuelle'] }],
+      ['site', 'Un site ou une appli', { d16: [3, 'Site web et e-commerce'] }],
+      ['visibilite', 'Des clients via les réseaux, la pub, le référencement', { d15: [3, 'Réseaux sociaux et contenus'] }],
+      ['contenus', 'Des photos et des vidéos', { d15: [2, 'Contenus photo et vidéo'], d13: [1, 'Photographie produit'] }]] }
+  ];
+  var SECTOR_EXTRA = { 'Santé privée': { d8: [3, 'Données de santé : conformité CNDP'] }, 'Formation privée': { d8: [1, 'Agréments et conformité'] }, 'Immobilier': { d7: [2, 'Mandats et contrats'] }, 'BTP & habitat': { d11: [1, 'Assurances de l’activité'], d7: [1, 'Contrats de chantier'] } };
+  function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function memberDomainsIn(db, m) {
+    var ids = (m.domains || []).slice(), mt = norm(m.metier);
+    db.domains.forEach(function (d) { if (ids.indexOf(d.id) < 0 && d.metiers.some(function (j) { return norm(j) === mt; })) ids.push(d.id); });
+    return ids;
+  }
+  function analyze(ans, extra, db) {
+    db = db || DB;
+    var sc = {};
+    function add(map) { Object.keys(map || {}).forEach(function (k) { var w = map[k]; sc[k] = sc[k] || { score: 0, reasons: [] }; sc[k].score += w[0]; if (sc[k].reasons.indexOf(w[1]) < 0) sc[k].reasons.push(w[1]); }); }
+    QUESTIONS.forEach(function (q) { (ans[q.k] || []).forEach(function (v) { var o = q.o.find(function (x) { return x[0] === v; }); if (o) add(o[2]); }); });
+    add(extra);
+    var list = Object.keys(sc).map(function (k) { return { d: db.domains.find(function (d) { return d.id === k; }), score: sc[k].score, reasons: sc[k].reasons }; })
+      .filter(function (x) { return x.d; }).sort(function (a, b) { return b.score - a.score || a.d.n - b.d.n; });
+    list.forEach(function (x) { x.level = x.score >= 4 ? 'Prioritaire' : x.score >= 2 ? 'Important' : 'Utile'; });
+    var ids = list.map(function (x) { return x.d.id; });
+    var members = db.members.map(function (m) {
+      var md = memberDomainsIn(db, m).filter(function (id) { return ids.indexOf(id) > -1; });
+      return { m: m, ds: md, score: md.reduce(function (a, id) { return a + list.find(function (x) { return x.d.id === id; }).score; }, 0) };
+    }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score; });
+    var have = db.members.map(function (m) { return norm(m.metier); });
+    var missing = [];
+    list.filter(function (x) { return x.score >= 3; }).forEach(function (x) { x.d.metiers.forEach(function (j) { if (have.indexOf(norm(j)) < 0 && !missing.some(function (y) { return y.job === j; })) missing.push({ job: j, d: x.d }); }); });
+    return { list: list, members: members, missing: missing };
+  }
+  function analyzeMarket(m, db) {
+    var txt = [m.solution, m.produit, m.modules, m.micro, m.nano, m.hypothesis, m.probleme].join(' ');
+    var a = { stade: ['idee'], offre: ['digital'], clients: [], equipe: [], argent: [], image: [] };
+    var PROD = ['Artisanat & export', 'Agroalimentaire', 'Industrie B2B', 'Commerce spécialisé'], LIEU = ['Tourisme', 'Santé privée', 'Beauté & bien-être', 'Restauration', 'Sport & loisirs', 'Formation privée'];
+    a.offre.push(PROD.indexOf(m.sector) > -1 ? 'produit' : LIEU.indexOf(m.sector) > -1 ? 'lieu' : 'service');
+    if (/B2B|entreprise|grossist|architect|h[oô]tel|industri|commerces|PME|RFQ|distribut|wholesale|tertiaire|promoteur|syndic|chantier/i.test(txt) || ['BTP & habitat', 'Industrie B2B', 'Logistique', 'Services professionnels', 'Énergie & eau'].indexOf(m.sector) > -1) a.clients.push('b2b');
+    if (LIEU.indexOf(m.sector) > -1 || ['Automobile', 'Immobilier', 'Commerce spécialisé'].indexOf(m.sector) > -1) a.clients.push('b2c');
+    if (/export|international|multilingue|\bEN\b|\bUE\b|expatri|touris|bilingue/i.test(txt) || m.sector === 'Tourisme') a.clients.push('intl');
+    if (/paiement|devis|commande|factur|acompte|billetterie|abonnement|pr[ée]pay|booking|r[ée]servation/i.test(txt)) a.argent.push('encaisser');
+    if (PROD.indexOf(m.sector) > -1) a.argent.push('acheter');
+    if (/brand|identit|packaging|naming|marque/i.test(m.solution)) a.image.push('marque');
+    if (/site|landing|funnel|catalogue|e-commerce|page/i.test(m.solution)) a.image.push('site');
+    if (/SEO|Ads|campagne|social|instagram|contenu|LinkedIn|acquisition|publicit|annonce/i.test(m.solution)) a.image.push('visibilite');
+    if (/vid[ée]o|photo|portfolio|avant\/apr[eè]s|cas/i.test(m.solution)) a.image.push('contenus');
+    return analyze(a, SECTOR_EXTRA[m.sector], db);
+  }
+  function suggestedSides(r, db) {
+    var sides = {};
+    r.list.forEach(function (x) {
+      if (x.score < 3) return;
+      var miss = r.missing.filter(function (y) { return y.d.id === x.d.id; }).map(function (y) { return y.job; });
+      sides[x.d.id] = { s: 'open', open: (miss.length ? miss : x.d.metiers).slice(0, 2), suggest: r.members.filter(function (mm) { return mm.ds.indexOf(x.d.id) > -1; }).slice(0, 3).map(function (mm) { return mm.m.id; }) };
+    });
+    return sides;
   }
   var DB = load();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} }
@@ -130,17 +243,75 @@
     $$('li', wrap).forEach(function (li, i) { var btn = li.firstElementChild; if (!btn.hasAttribute('aria-expanded')) return; var o = on || i === 0; li.classList.toggle('open', o); btn.setAttribute('aria-expanded', o); });
   };
 
+  /* ================= RECHERCHE (sides, missions, compétences, métiers, membres, projets) ================= */
+  var IS_ADMIN = PAGE.indexOf('admin-') === 0;
+  function jobMembers(job) { return DB.members.filter(function (m) { return norm(m.metier) === norm(job); }); }
+  function searchIndex() {
+    var it = [], skills = {}, jobs = {};
+    DB.domains.forEach(function (d) {
+      var href = IS_ADMIN ? 'modele.html#' + d.id : ROOT + 'sides.html#' + d.id, pl = poleOf(d);
+      it.push({ g: 'Sides', l: pad(d.n) + ' · ' + d.t, s: pl ? pl.t : '', h: href });
+      d.tasks.forEach(function (t) { it.push({ g: 'Missions', l: t, s: 'Side ' + pad(d.n) + ' · ' + d.t, h: href }); });
+      d.comp.forEach(function (c) { (skills[c] = skills[c] || []).push(d); });
+      d.metiers.forEach(function (j) { (jobs[j] = jobs[j] || []).push(d); });
+    });
+    Object.keys(skills).forEach(function (c) { var ds = skills[c]; it.push({ g: 'Compétences', l: c, s: 'Sides ' + ds.map(function (d) { return pad(d.n); }).join(', '), h: IS_ADMIN ? 'modele.html#' + ds[0].id : ROOT + 'sides.html#' + ds[0].id }); });
+    Object.keys(jobs).forEach(function (j) { var ds = jobs[j], n = jobMembers(j).length; it.push({ g: 'Métiers', l: j, s: n + ' membre' + (n > 1 ? 's' : '') + ' · sides ' + ds.map(function (d) { return pad(d.n); }).join(', '), h: (IS_ADMIN ? '../' : ROOT) + 'membres.html#job-' + slug(j) }); });
+    DB.members.forEach(function (m) { it.push({ g: 'Membres', l: m.name, s: m.metier + ' · ' + m.type + (m.city ? ' · ' + m.city : ''), h: IS_ADMIN ? 'membres.html' : ROOT + 'membres.html#' + m.slug }); });
+    DB.projects.forEach(function (p) {
+      if (!IS_ADMIN && p.status !== 'pub') return;
+      it.push({ g: p.market ? 'Marchés' : 'Projets', l: p.title, s: (p.market ? p.market.id + ' · ' + p.market.sector + ' · ' : '') + p.sub + ' · ' + p.place, h: IS_ADMIN ? 'projet.html#' + p.slug : ROOT + 'projet.html#' + p.slug });
+    });
+    return it;
+  }
+  var GROUPS = ['Sides', 'Métiers', 'Membres', 'Projets', 'Marchés', 'Compétences', 'Missions'];
+  function runSearch(q) {
+    var words = norm(q).split(/\s+/).filter(Boolean), res = $('#searchres');
+    if (!words.length) { res.innerHTML = '<p class="small search__hint">Tape un side, une mission, une compétence, un métier, un membre ou un projet. Exemples : « TVA », « comptable », « packaging », « Marrakech ».</p>'; return; }
+    var hits = searchIndex().map(function (x) { var h = norm(x.l + ' ' + x.s), l = norm(x.l); return words.every(function (w) { return h.indexOf(w) > -1; }) ? { x: x, r: (l.indexOf(words[0]) === 0 ? 2 : 0) + (l.indexOf(words[0]) > -1 ? 1 : 0) } : null; }).filter(Boolean);
+    if (!hits.length) { res.innerHTML = '<p class="small search__hint">Aucun résultat pour « ' + esc(q) + ' ».</p>'; return; }
+    res.innerHTML = GROUPS.map(function (g) {
+      var l = hits.filter(function (h) { return h.x.g === g; }).sort(function (a, b) { return b.r - a.r; });
+      if (!l.length) return '';
+      return '<div class="search__g"><p class="lbl">' + g + ' <span class="tab">' + l.length + '</span></p><ul>' + l.slice(0, 6).map(function (h) { return '<li><a href="' + h.x.h + '" data-act="searchgo"><b>' + esc(h.x.l) + '</b><span>' + esc(h.x.s) + '</span></a></li>'; }).join('') + '</ul></div>';
+    }).join('');
+  }
+  function openSearch(q) {
+    var o = $('#search');
+    if (!o) {
+      o = document.createElement('div'); o.id = 'search'; o.className = 'search'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Recherche');
+      o.innerHTML = '<div class="search__panel"><div class="search__box"><input type="search" id="searchq" data-in="searchq" placeholder="Rechercher un side, un métier, un membre, un projet…" aria-label="Rechercher" autocomplete="off"><button type="button" class="sheet__close" data-act="searchclose" aria-label="Fermer">×</button></div><div class="search__res" id="searchres"></div></div>';
+      o.addEventListener('click', function (e) { if (e.target === o) closeSearch(); });
+      document.body.appendChild(o);
+    }
+    o.hidden = false; document.body.style.overflow = 'hidden';
+    var i = $('#searchq'); i.value = q || ''; runSearch(i.value); setTimeout(function () { i.focus(); }, 20);
+  }
+  function closeSearch() { var o = $('#search'); if (o) o.hidden = true; document.body.style.overflow = ''; }
+  ACT.search = function () { openSearch(''); };
+  ACT.searchclose = closeSearch;
+  ACT.searchgo = function () { closeSearch(); };
+  IN.searchq = function (el) { runSearch(el.value); };
+  document.addEventListener('keydown', function (e) {
+    var typing = /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ''));
+    if ((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); openSearch(''); }
+    else if (e.key === 'Escape' && $('#search') && !$('#search').hidden) closeSearch();
+    else if (e.key === 'Enter' && e.target.id === 'searchq') { var a = $('#searchres a'); if (a) { closeSearch(); location.href = a.getAttribute('href'); } }
+  });
+  var SEARCH_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+
   /* ================= SITE PUBLIC ================= */
-  var NAV = [['index.html', 'Accueil', 'home'], ['projets.html', 'Projets', 'projets'], ['sides.html', 'Sides', 'sides'], ['metiers.html', 'Métiers', 'metiers'], ['cercle.html', 'Le cercle', 'cercle'], ['membres.html', 'Membres', 'membres']];
+  var NAV = [['projets.html', 'Projets', 'projets'], ['sides.html', 'Sides', 'sides'], ['metiers.html', 'Métiers', 'metiers'], ['membres.html', 'Membres', 'membres'], ['cercle.html', 'Le cercle', 'cercle'], ['rejoindre.html', 'Rejoindre', 'rejoindre']];
   function shell(view) {
     var cur = PAGE === 'projet' ? 'projets' : PAGE;
     APP.innerHTML =
       '<header class="nav" id="nav"><div class="nav__pill">' +
       '<a class="nav__brand" href="' + ROOT + 'index.html" aria-label="ACHIRA, accueil">' + LOGO + '<b>ACHIRA</b></a>' +
       '<nav class="nav__links" aria-label="Navigation">' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '"' + (cur === n[2] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
-      '<a class="btn btn--bord nav__cta" href="' + ROOT + 'rejoindre.html">Rejoindre</a>' +
+      '<button type="button" class="nav__search" data-act="search" aria-label="Rechercher (touche /)">' + SEARCH_ICON + '</button>' +
+      '<a class="btn btn--bord nav__cta" href="' + ROOT + 'deposer.html">Déposer un projet</a>' +
       '<button class="nav__menu" type="button" data-act="menu" aria-expanded="false">Menu</button></div></header>' +
-      '<div class="drawer-nav" id="drawer" hidden>' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '">' + n[1] + '</a>'; }).join('') + '<a href="' + ROOT + 'rejoindre.html" style="color:var(--champ)">Rejoindre</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener">Discord ↗</a></div>' +
+      '<div class="drawer-nav" id="drawer" hidden>' + NAV.map(function (n) { return '<a href="' + ROOT + n[0] + '">' + n[1] + '</a>'; }).join('') + '<a href="' + ROOT + 'deposer.html" style="color:var(--champ)">Déposer un projet</a><a href="' + esc(discordUrl()) + '" target="_blank" rel="noopener">Discord ↗</a></div>' +
       '<main id="view">' + view + '</main>' +
       '<footer class="foot"><div class="in">' +
       '<div class="foot__brand">' + LOGO + '<p class="lead" style="font-size:22px">Un cercle qui avance ensemble.</p><p class="foot__motto">' + esc(DB.content.motto) + '</p></div>' +
@@ -185,7 +356,7 @@
       tile('portal--open', 'metiers.html', 'Le cercle cherche', 'Métiers', 'Les savoir-faire attendus sur les projets en cours.', roles.length + ' ouverts', '') +
       tile('', 'cercle.html', 'ACHIRA', 'Le cercle', 'Qui nous sommes, ce qui nous relie.', '', 'u-cercle-1') +
       tile('', 'membres.html', 'Les personnes', 'Membres', 'Celles et ceux qui portent les sides.', DB.members.length + ' membres', 'u-cercle-3') +
-      tile('portal--join', 'rejoindre.html', 'Ton tour', 'Rejoindre', 'Propose ton savoir-faire, comme salarié, indépendant ou cabinet.', '', '') +
+      tile('portal--join', 'deposer.html', 'Ton projet', 'Déposer un projet', 'Réponds à six questions : on te montre les sides touchés et les personnes du cercle qui peuvent t’aider.', '', '') +
       '</div></div></section>' +
 
       '<section class="band bord" id="contact"><div class="in"><div class="head"><p class="eyebrow">Contact</p><h2 class="h2">Parlons-en.</h2><p class="body">Une question, une idée de projet, un savoir-faire à proposer : choisis le moyen qui te va.</p></div>' +
@@ -201,12 +372,14 @@
   function pSides() {
     var C = DB.content, roles = allRoles(), feat = pubProjects()[0];
     shell(
-      '<section class="phero"><div class="in"><p class="eyebrow rv">Les sides d’un projet</p><h1 class="h1 rv">Un projet a ' + DB.domains.length + ' côtés.</h1><p class="lead rv" style="max-width:40ch">' + esc(C.sidesIntro) + '</p></div></section>' +
+      '<section class="phero"><div class="in"><p class="eyebrow rv">Les sides d’un projet</p><h1 class="h1 rv">Un projet a ' + DB.domains.length + ' côtés.</h1><p class="lead rv" style="max-width:40ch">' + esc(C.sidesIntro) + '</p>' +
+      '<button type="button" class="searchbar rv" data-act="search">' + SEARCH_ICON + '<span>Rechercher un side, une mission, une compétence, un métier…</span><kbd>/</kbd></button></div></section>' +
       '<section class="band bord"><div class="in"><div class="head head--split"><div class="head"><p class="eyebrow">Par pôle</p><h2 class="h2">Tous les sides.</h2></div>' + (feat ? '<a class="link" href="projet.html#' + feat.slug + '">Voir un projet complet <span>→</span></a>' : '') + '</div>' +
       '<div class="poles">' + DB.poles.map(function (pl) {
         return '<div class="pole"><p class="eyebrow">' + esc(pl.t) + '</p><div class="sgrid">' + pl.d.map(dom).filter(Boolean).map(function (d) {
           var n = roles.filter(function (r) { return r.d.id === d.id; }).length;
-          return '<a class="side" href="metiers.html#' + d.id + '"><div class="side__top"><span class="num">' + pad(d.n) + '</span>' + (n ? '<span class="st st--open">' + n + ' recherché' + (n > 1 ? 's' : '') + '</span>' : '') + '</div><h3 class="h4">' + esc(d.t) + '</h3><p class="small">' + d.tasks.length + ' missions · ' + d.metiers.length + ' métiers</p></a>';
+          var nm = DB.members.filter(function (m) { return memberDomainsIn(DB, m).indexOf(d.id) > -1; }).length;
+          return '<a class="side" id="' + d.id + '" href="metiers.html#' + d.id + '"><div class="side__top"><span class="num">' + pad(d.n) + '</span>' + (n ? '<span class="st st--open">' + n + ' recherché' + (n > 1 ? 's' : '') + '</span>' : '') + '</div><h3 class="h4">' + esc(d.t) + '</h3><p class="small">' + d.tasks.length + ' missions · ' + d.metiers.length + ' métiers · ' + nm + ' membre' + (nm > 1 ? 's' : '') + '</p></a>';
         }).join('') + '</div></div>';
       }).join('') + '</div></div></section>' +
 
@@ -306,7 +479,8 @@
       '<select data-ch="fp" aria-label="Projet" style="max-width:240px"><option value="">Tous les projets</option>' + pubProjects().map(function (p) { return '<option value="' + p.slug + '"' + (F.p === p.slug ? ' selected' : '') + '>' + esc(p.title) + '</option>'; }).join('') + '</select></div>' +
       '<ul class="roles" id="results"></ul></div></section>' +
       '<section class="band bord"><div class="in"><div class="head"><p class="eyebrow">Le catalogue</p><h2 class="h2">Tous les métiers des sides.</h2><p class="body">Aucun poste ouvert pour toi ? Fais-toi connaître : le cercle te contactera quand un projet aura besoin de ton métier.</p></div>' +
-      '<div class="sgrid">' + DB.domains.map(function (d) { return '<div class="side"><span class="num">' + pad(d.n) + '</span><h3 class="h4">' + esc(d.t) + '</h3><div class="chips">' + d.metiers.map(function (m) { return '<span class="chip">' + esc(m) + '</span>'; }).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<div class="sgrid">' + DB.domains.map(function (d) { return '<div class="side"><span class="num">' + pad(d.n) + '</span><h3 class="h4">' + esc(d.t) + '</h3><div class="chips">' + d.metiers.map(function (m) { var n = jobMembers(m).length; return '<a class="chip' + (n ? ' chip--on' : '') + '" href="membres.html#job-' + slug(m) + '" title="' + n + ' membre(s)">' + esc(m) + (n ? ' · ' + n : '') + '</a>'; }).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<p class="small">Le chiffre indique le nombre de membres du cercle qui exercent ce métier. Modes d’exercice possibles : ' + DB.pros.join(', ') + ' (catégories indicatives, pas des habilitations).</p>' +
       '<div class="row"><a class="btn btn--solid" href="rejoindre.html">Me faire connaître</a>' + dBtn() + '</div></div></section>');
     renderMetiers();
   }
@@ -338,22 +512,97 @@
   }
 
   /* ----- Membres ----- */
-  var MP = 'tous';
+  var MP = 'tous', MQ = '', MJ = '';
+  function allJobs() { var l = []; DB.domains.forEach(function (d) { d.metiers.forEach(function (j) { if (l.indexOf(j) < 0) l.push(j); }); }); return l; }
   function pMembres() {
-    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Membres</p><h1 class="h1 rv">Celles et ceux qui avancent.</h1><p class="lead rv" style="max-width:36ch">Artisans, créatifs, experts : chacun porte un ou plusieurs sides des projets du cercle.</p></div></section>' +
-      '<section class="band dark band--tight"><div class="in"><div class="chips" role="group" aria-label="Pôle">' + [['tous', 'Tous']].concat(DB.poles.map(function (p) { return [p.id, p.t]; })).map(function (x) { return '<button class="chip" type="button" data-act="mp" data-v="' + x[0] + '" aria-pressed="' + (MP === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div><div class="mgrid" id="results"></div></div></section>');
+    var h = hash(); MJ = '';
+    if (h.indexOf('job-') === 0) allJobs().forEach(function (j) { if ('job-' + slug(j) === h) MJ = j; });
+    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Membres</p><h1 class="h1 rv">Celles et ceux qui avancent.</h1><p class="lead rv" style="max-width:36ch">Chaque membre exerce un métier de l’arbre ; ce métier le relie aux sides qu’il peut porter.</p></div></section>' +
+      '<section class="band dark band--tight"><div class="in"><div class="toolbar"><input type="search" data-in="mq" value="' + esc(MQ) + '" placeholder="Rechercher un nom, un métier, une ville, un side…" aria-label="Rechercher un membre" style="max-width:340px">' +
+      '<select data-ch="mj" aria-label="Métier" style="max-width:260px"><option value="">Tous les métiers</option>' + allJobs().map(function (j) { var n = jobMembers(j).length; return '<option value="' + esc(j) + '"' + (MJ === j ? ' selected' : '') + '>' + esc(j) + ' (' + n + ')</option>'; }).join('') + '</select>' +
+      '<div class="chips" role="group" aria-label="Pôle">' + [['tous', 'Tous']].concat(DB.poles.map(function (p) { return [p.id, p.t]; })).map(function (x) { return '<button class="chip" type="button" data-act="mp" data-v="' + x[0] + '" aria-pressed="' + (MP === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div></div>' +
+      '<div id="jobinfo"></div><div class="mgrid" id="results"></div></div></section>');
     renderMembres();
   }
   function renderMembres() {
-    var pole = DB.poles.find(function (p) { return p.id === MP; });
-    var l = DB.members.filter(function (m) { return !pole || m.domains.some(function (d) { return pole.d.indexOf(d) > -1; }); });
-    $('#results').innerHTML = l.map(function (m) {
+    var pole = DB.poles.find(function (p) { return p.id === MP; }), q = norm(MQ).split(/\s+/).filter(Boolean);
+    var info = $('#jobinfo');
+    if (MJ) {
+      var ds = DB.domains.filter(function (d) { return d.metiers.indexOf(MJ) > -1; });
+      info.innerHTML = '<div class="discord-band"><div><p class="eyebrow">Métier</p><h2 class="h3">' + esc(MJ) + '</h2><p class="small">Intervient sur : ' + ds.map(function (d) { return pad(d.n) + ' ' + esc(d.t); }).join(' · ') + ' · ' + DB.pros.join(', ') + '</p></div><button class="btn btn--line btn--sm" data-act="mjclear">Tous les métiers</button></div>';
+    } else info.innerHTML = '';
+    var l = DB.members.filter(function (m) {
+      var md = memberDomainsIn(DB, m), txt = norm([m.name, m.metier, m.type, m.city, m.bio].concat(md.map(function (id) { return dom(id).t; })).join(' '));
+      return (!pole || md.some(function (d) { return pole.d.indexOf(d) > -1; })) && (!MJ || norm(m.metier) === norm(MJ)) && q.every(function (w) { return txt.indexOf(w) > -1; });
+    });
+    $('#results').innerHTML = l.length ? l.map(function (m) {
       var n = DB.projects.filter(function (p) { return p.status === 'pub' && Object.keys(p.sides).some(function (k) { return p.sides[k].lead === m.id && p.sides[k].s !== 'na'; }); }).length;
-      return '<div class="mcard"><div class="mcard__ph">' + (m.img ? '<img src="' + img(m.img) + '" alt="' + esc(m.name) + '" loading="lazy">' : '<span>' + esc(m.name[0]) + '</span>') + '</div><div><h3 class="h3" style="font-size:28px">' + esc(m.name) + '</h3><p class="small">' + esc(m.metier) + ' · ' + esc(m.type) + ' · ' + esc(m.city) + '</p></div><p>' + esc(m.bio) + '</p>' +
-        '<div class="chips">' + m.domains.map(dom).filter(Boolean).map(function (d) { return '<span class="chip">' + pad(d.n) + ' ' + esc(d.t) + '</span>'; }).join('') + '</div><p class="small tab">' + n + ' projet' + (n > 1 ? 's' : '') + ' en cours ou terminés</p></div>';
-    }).join('');
+      return '<div class="mcard" id="' + esc(m.slug) + '"><div class="mcard__ph">' + (m.img ? '<img src="' + img(m.img) + '" alt="' + esc(m.name) + '" loading="lazy">' : '<span>' + esc(m.name[0]) + '</span>') + '</div><div><h3 class="h3" style="font-size:28px">' + esc(m.name) + '</h3><p class="small"><a href="membres.html#job-' + slug(m.metier) + '" style="color:var(--champ)">' + esc(m.metier) + '</a> · ' + esc(m.type) + (m.city ? ' · ' + esc(m.city) : '') + '</p></div><p>' + esc(m.bio) + '</p>' +
+        '<div class="chips">' + memberDomainsIn(DB, m).map(dom).filter(Boolean).map(function (d) { return '<a class="chip" href="sides.html#' + d.id + '">' + pad(d.n) + ' ' + esc(d.t) + '</a>'; }).join('') + '</div><p class="small tab">' + n + ' projet' + (n > 1 ? 's' : '') + ' en cours ou terminés</p></div>';
+    }).join('') : '<p class="body">Aucun membre ne correspond. <a class="link" href="rejoindre.html">Tu exerces ce métier ? Rejoins le cercle <span>→</span></a></p>';
   }
   ACT.mp = function (b) { MP = b.dataset.v; $$('[data-act=mp]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderMembres(); };
+  ACT.mjclear = function () { MJ = ''; history.replaceState(null, '', location.pathname); var s = $('[data-ch=mj]'); if (s) s.value = ''; renderMembres(); };
+  CH.mj = function (el) { MJ = el.value; renderMembres(); };
+  IN.mq = function (el) { MQ = el.value; renderMembres(); };
+
+  /* ----- Déposer un projet : questions → sides → métiers → personnes ----- */
+  var WA = { secteur: '', stade: [], offre: [], clients: [], equipe: [], argent: [], image: [] };
+  var SECTEURS = ['Mode et cuir', 'Artisanat & export', 'Agroalimentaire', 'Tourisme', 'Restauration', 'Santé privée', 'Beauté & bien-être', 'Formation privée', 'Sport & loisirs', 'BTP & habitat', 'Immobilier', 'Industrie B2B', 'Logistique', 'Énergie & eau', 'Automobile', 'Commerce spécialisé', 'Services professionnels', 'Autre'];
+  function pDeposer() {
+    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Déposer un projet</p><h1 class="h1 rv">Ton projet, tous ses côtés.</h1><p class="lead rv" style="max-width:42ch">Réponds aux questions : à chaque réponse, on te montre les sides que ton projet touche, les métiers dont il a besoin et les personnes du cercle qui peuvent t’aider.</p></div></section>' +
+      '<section class="band dark band--tight"><div class="in"><div class="wiz"><div class="wiz__q" id="wizq"></div><aside class="wiz__r" id="wizr" aria-live="polite"></aside></div></div></section>');
+    renderWizQ(); renderWizR();
+  }
+  function answered() { return QUESTIONS.filter(function (q) { return WA[q.k].length; }).length + (WA.secteur ? 1 : 0); }
+  function renderWizQ() {
+    var total = QUESTIONS.length + 1;
+    $('#wizq').innerHTML = '<div class="wiz__prog"><span style="width:' + Math.round(answered() / total * 100) + '%"></span></div><p class="small tab">' + answered() + ' / ' + total + ' questions</p>' +
+      '<fieldset class="wq"><legend><span class="num">01</span> Dans quel secteur ?</legend><select data-ch="wsec" aria-label="Secteur"><option value="">Choisir un secteur</option>' + SECTEURS.map(function (s) { return '<option' + (WA.secteur === s ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></fieldset>' +
+      QUESTIONS.map(function (q, i) {
+        return '<fieldset class="wq"><legend><span class="num">' + pad(i + 2) + '</span> ' + esc(q.t) + (q.multi ? ' <span class="small">plusieurs choix possibles</span>' : '') + '</legend><div class="chips">' +
+          q.o.map(function (o) { return '<button type="button" class="chip" data-act="wopt" data-q="' + q.k + '" data-v="' + o[0] + '" aria-pressed="' + (WA[q.k].indexOf(o[0]) > -1) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div></fieldset>';
+      }).join('') +
+      '<form class="wq form" id="wizf" novalidate><legend class="full"><span class="num">' + pad(QUESTIONS.length + 2) + '</span> Présente ton projet</legend>' +
+      '<div class="field full"><label for="w-title">Nom du projet</label><input type="text" id="w-title" required></div>' +
+      '<div class="field full"><label for="w-desc">En quelques lignes</label><textarea id="w-desc" placeholder="Ce que tu veux faire, pour qui, et où tu en es."></textarea></div>' +
+      '<div class="field"><label for="w-city">Ville</label><input type="text" id="w-city"></div><div class="field"><label for="w-name">Ton nom</label><input type="text" id="w-name" required autocomplete="name"></div>' +
+      '<div class="field full"><label for="w-email">E-mail</label><input type="email" id="w-email" required autocomplete="email"></div>' +
+      '<p class="full small" id="w-err" role="alert"></p><div class="full row"><button class="btn btn--bord" type="submit">Envoyer mon projet au cercle</button>' + dBtn() + '</div></form>';
+    $('#wizf').addEventListener('submit', submitWiz);
+  }
+  function wizResult() { return analyze(WA, SECTOR_EXTRA[WA.secteur]); }
+  function renderWizR() {
+    var r = wizResult(), top = r.list.slice(0, 8);
+    if (!r.list.length) { $('#wizr').innerHTML = '<p class="eyebrow">Ton projet</p><h2 class="h3">Réponds à une question pour commencer.</h2><p class="small">Les sides touchés, les métiers et les personnes du cercle apparaîtront ici.</p>'; return; }
+    $('#wizr').innerHTML = '<p class="eyebrow">Ton projet touche</p><h2 class="h2" style="font-size:48px"><span class="tab">' + r.list.length + '</span> sides</h2>' +
+      '<ol class="wr-sides">' + top.map(function (x) { return '<li><span class="num">' + pad(x.d.n) + '</span><div><b>' + esc(x.d.t) + '</b><span>' + esc(x.reasons.join(' · ')) + '</span></div><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></li>'; }).join('') + '</ol>' +
+      (r.list.length > top.length ? '<p class="small">+ ' + (r.list.length - top.length) + ' side(s) utile(s)</p>' : '') +
+      '<p class="lbl" style="margin-top:8px">Les personnes du cercle</p>' +
+      (r.members.length ? '<ul class="wr-people">' + r.members.slice(0, 5).map(function (x) { return '<li>' + avatar(x.m) + '<div><b>' + esc(x.m.name) + '</b><span>' + esc(x.m.metier) + ' · ' + esc(x.m.type) + '</span><span class="wr-ds">' + x.ds.map(function (id) { return pad(dom(id).n); }).join(' · ') + '</span></div></li>'; }).join('') + '</ul>' : '<p class="small">Personne dans le cercle pour ces sides pour l’instant.</p>') +
+      (r.missing.length ? '<p class="lbl" style="margin-top:8px">Métiers à trouver</p><div class="chips">' + r.missing.slice(0, 8).map(function (y) { return '<span class="chip chip--open" title="Side ' + pad(y.d.n) + '">' + esc(y.job) + '</span>'; }).join('') + '</div>' : '');
+  }
+  ACT.wopt = function (b) {
+    var q = QUESTIONS.find(function (x) { return x.k === b.dataset.q; }), v = b.dataset.v, cur = WA[q.k], i = cur.indexOf(v);
+    if (q.multi) { if (i > -1) cur.splice(i, 1); else cur.push(v); } else WA[q.k] = i > -1 ? [] : [v];
+    $$('[data-act=wopt][data-q="' + q.k + '"]').forEach(function (x) { x.setAttribute('aria-pressed', WA[q.k].indexOf(x.dataset.v) > -1); });
+    updateProg(); renderWizR();
+  };
+  CH.wsec = function (el) { WA.secteur = el.value; updateProg(); renderWizR(); };
+  function updateProg() { var t = QUESTIONS.length + 1; $('.wiz__prog span').style.width = Math.round(answered() / t * 100) + '%'; $('.wiz__prog + p').textContent = answered() + ' / ' + t + ' questions'; }
+  function submitWiz(e) {
+    e.preventDefault();
+    var v = function (id) { return $('#' + id).value.trim(); };
+    if (!v('w-title') || !v('w-name') || !v('w-email')) { $('#w-err').textContent = 'Indique le nom du projet, ton nom et ton e-mail.'; return; }
+    if (!answered()) { $('#w-err').textContent = 'Réponds à au moins une question pour que le cercle sache quels sides ton projet touche.'; return; }
+    var r = wizResult(), base = slug(v('w-title')), sl = base, n = 2;
+    while (proj(sl)) sl = base + '-' + n++;
+    DB.projects.unshift({ slug: sl, title: v('w-title'), sub: v('w-desc').slice(0, 120), disc: WA.secteur || 'À préciser', place: v('w-city'), year: new Date().getFullYear(), phase: { idee: 'Idée', lancement: 'Lancement', activite: 'Production' }[WA.stade[0]] || 'Idée',
+      status: 'draft', featured: false, img: 'u-cercle-2', story: v('w-desc'), achira: false, specialite: '', origin: 'depot',
+      submitter: { name: v('w-name'), email: v('w-email'), when: new Date().toLocaleDateString('fr-FR') }, answers: JSON.parse(JSON.stringify(WA)), sides: suggestedSides(r, DB) });
+    save();
+    $('#wizf').outerHTML = '<div class="notice wq"><h3 class="h3">Merci ' + esc(v('w-name')) + '.</h3><p style="margin-top:8px">Ton projet « ' + esc(v('w-title')) + ' » est arrivé dans la dashboard avec ' + r.list.filter(function (x) { return x.score >= 3; }).length + ' sides à pourvoir et ' + Math.min(r.members.length, 5) + ' personnes suggérées. <a class="link" href="admin/projet.html#' + sl + '">Le voir dans la dashboard <span>→</span></a></p></div>';
+  }
 
   /* ----- Rejoindre ----- */
   function pRejoindre() {
@@ -395,6 +644,7 @@
   function admin(eb, title, actions, body) {
     var cur = PAGE === 'admin-projet' ? 'admin-projets' : PAGE;
     APP.innerHTML = '<div class="adm"><aside class="side-nav"><a class="adm-logo" href="index.html">' + LOGO + '<span><b>ACHIRA</b><small>Dashboard</small></span></a>' +
+      '<button type="button" class="adm-search" data-act="search">' + SEARCH_ICON + '<span>Rechercher</span><kbd>/</kbd></button>' +
       '<nav class="adm-menu" aria-label="Dashboard">' + ADM.map(function (a) {
         if (a.length === 1) return '<span class="sep">' + a[0] + '</span>';
         var b = a[2] === 'admin-candidatures' && newSubs() ? '<span class="badge">' + newSubs() + '</span>' : '';
@@ -428,6 +678,12 @@
       topMk.map(function (p) { var m = p.market; return '<li>' + achBtn(p) + '<a class="grow" href="projet.html#' + p.slug + '"><b>' + esc(m.micro) + '</b> <span class="small">· ' + m.id + '</span><p class="small">' + esc(m.nano) + ' · ' + esc(m.city) + '</p></a><span class="score tab">' + m.score + '</span>' + prio(m) + '</li>'; }).join('') + '</ul></section>' +
       '<section class="panel"><h2 class="h3">Marchés par secteur</h2><div class="tbl"><table style="min-width:0"><thead><tr><th>Secteur</th><th>Niches</th><th>Score moyen</th><th>Prio A</th><th>ACHIRA</th></tr></thead><tbody>' +
       secs.map(function (s) { var b = bySec[s]; return '<tr><td>' + esc(s) + '</td><td class="tab">' + b.n + '</td><td class="tab">' + Math.round(b.sum / b.n) + '</td><td class="tab">' + b.a + '</td><td class="tab" style="color:var(--champ)">' + (b.ach || '') + '</td></tr>'; }).join('') + '</tbody></table></div></section></div>' +
+      (function () {
+        var dep = DB.projects.filter(function (p) { return p.origin === 'depot'; });
+        return '<section class="panel"><div class="panel__h"><div><h2 class="h3">Projets déposés</h2><p class="small">Envoyés depuis le formulaire public : sides calculés et personnes suggérées.</p></div><a class="btn btn--line btn--sm" href="../deposer.html">Ouvrir le formulaire ↗</a></div>' +
+          (dep.length ? '<ul class="list">' + dep.slice(0, 6).map(function (p) { var c = cov(p); return '<li><a class="grow" href="projet.html#' + p.slug + '"><b>' + esc(p.title) + '</b><p class="small">' + esc(p.disc) + (p.place ? ' · ' + esc(p.place) : '') + ' · ' + (p.submitter ? esc(p.submitter.name) + ' · ' + esc(p.submitter.when) : '') + '</p></a><span class="st st--open">' + c.open + ' à pourvoir</span></li>'; }).join('') + '</ul>'
+            : '<p class="small">Aucun projet déposé pour l’instant. Remplis le formulaire public pour voir le parcours complet.</p>') + '</section>';
+      })() +
       '<section class="panel"><div class="panel__h"><div><h2 class="h3">Couverture des sides par projet</h2><p class="small">Projets du cercle et marchés marqués « spécialité ACHIRA ».</p></div>' + legend() + '</div><div class="matrix"><table><thead><tr><th>Projet</th>' + DB.domains.map(function (d) { return '<th class="d" title="' + esc(d.t) + '">' + pad(d.n) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       DB.projects.filter(function (p) { return !p.market || p.achira; }).map(function (p) { return '<tr class="click" data-act="goedit" data-s="' + p.slug + '"><td style="white-space:nowrap"><b>' + esc(p.title) + '</b><br><span class="st st--' + p.status + '">' + PUB[p.status] + '</span></td>' + DB.domains.map(function (d) { var s = (p.sides[d.id] || { s: 'na' }).s; return '<td class="c"><span class="cell ' + s + '" title="' + esc(d.t + ' : ' + ST[s]) + '"></span></td>'; }).join('') + '</tr>'; }).join('') +
       '</tbody></table></div><p class="small">' + DB.domains.map(function (d) { return pad(d.n) + ' ' + d.t; }).join(' · ') + '</p></section>' +
@@ -440,13 +696,14 @@
 
   /* ----- Projets ----- */
   var AF = { s: 'tous', q: '', o: 'tous', sec: '', pr: '', ach: false, sort: 'score' };
+  function originOf(p) { return p.market ? 'marche' : p.origin === 'depot' ? 'depot' : 'achira'; }
   function sectors() { var l = []; DB.projects.forEach(function (p) { if (p.market && l.indexOf(p.market.sector) < 0) l.push(p.market.sector); }); return l.sort(); }
   function aProjets() {
     if (hash() === 'nouveau') { history.replaceState(null, '', location.pathname); return ACT.newp(); }
-    var nm = DB.projects.filter(function (p) { return p.market; }).length;
-    admin('Contenu', 'Projets et marchés', '<button class="btn btn--bord" data-act="newp">+ Nouveau projet</button>',
+    var cnt = function (o) { return DB.projects.filter(function (p) { return originOf(p) === o; }).length; };
+    admin('Contenu', 'Projets et marchés', '<a class="btn btn--line" href="../deposer.html">Formulaire « Déposer » ↗</a><button class="btn btn--bord" data-act="newp">+ Nouveau projet</button>',
       '<div class="toolbar">' +
-      '<div class="seg" role="group" aria-label="Origine">' + [['tous', 'Tout (' + DB.projects.length + ')'], ['achira', 'Projets du cercle (' + (DB.projects.length - nm) + ')'], ['marche', 'Marchés (' + nm + ')']].map(function (x) { return '<button type="button" data-act="ao" data-v="' + x[0] + '" aria-pressed="' + (AF.o === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="seg" role="group" aria-label="Origine">' + [['tous', 'Tout (' + DB.projects.length + ')'], ['achira', 'Cercle (' + cnt('achira') + ')'], ['depot', 'Déposés (' + cnt('depot') + ')'], ['marche', 'Marchés (' + cnt('marche') + ')']].map(function (x) { return '<button type="button" data-act="ao" data-v="' + x[0] + '" aria-pressed="' + (AF.o === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
       '<div class="seg" role="group" aria-label="Statut">' + [['tous', 'Tous statuts'], ['pub', 'Publiés'], ['draft', 'Brouillons'], ['arch', 'Archivés']].map(function (x) { return '<button type="button" data-act="as" data-v="' + x[0] + '" aria-pressed="' + (AF.s === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
       '<div class="toolbar"><input type="search" data-in="aq" value="' + esc(AF.q) + '" placeholder="Rechercher : niche, ville, entreprise, MA-001…" aria-label="Rechercher">' +
       '<select data-ch="asec" aria-label="Secteur" style="max-width:220px"><option value="">Tous les secteurs</option>' + sectors().map(function (s) { return '<option' + (AF.sec === s ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select>' +
@@ -462,7 +719,7 @@
     var q = AF.q.toLowerCase();
     var l = DB.projects.filter(function (p) {
       var m = p.market;
-      return (AF.s === 'tous' || p.status === AF.s) && (AF.o === 'tous' || (AF.o === 'marche' ? m : !m)) && (!AF.sec || (m && m.sector === AF.sec)) && (!AF.pr || (m && m.priority === AF.pr)) && (!AF.ach || p.achira) &&
+      return (AF.s === 'tous' || p.status === AF.s) && (AF.o === 'tous' || originOf(p) === AF.o) && (!AF.sec || (m && m.sector === AF.sec)) && (!AF.pr || (m && m.priority === AF.pr)) && (!AF.ach || p.achira) &&
         (!q || [p.title, p.sub, p.place, p.disc, p.specialite, m && m.id, m && m.contact.company].join(' ').toLowerCase().indexOf(q) > -1);
     }).sort(function (a, b) {
       if (AF.sort === 'nom') return a.title.localeCompare(b.title, 'fr');
@@ -512,6 +769,7 @@
       '<div class="field"><label for="e-spec">Spécialité (facultatif)</label><input type="text" id="e-spec" data-ch="pf" data-k="specialite" value="' + esc(p.specialite) + '" placeholder="Ex. Tourisme premium, Cuir, SaaS réservation…"></div></section>' +
       '<section class="panel"><h2 class="h3">Couverture</h2>' + covBar(p) + '<div class="toggle"><span>À la une sur l’accueil</span><button class="switch" role="switch" aria-label="À la une" aria-checked="' + !!p.featured + '" data-act="feat"></button></div></section>' +
       '<section class="panel"><h2 class="h3">Image de couverture</h2><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">' + IMGS.map(function (i) { return '<button type="button" data-act="cover" data-v="' + i + '" aria-label="Choisir ' + i + '" style="aspect-ratio:1;border-radius:8px;overflow:hidden;outline:' + (p.img === i ? '2px solid var(--champ)' : '0') + ';outline-offset:2px"><img src="' + img(i) + '" alt="" style="width:100%;height:100%;object-fit:cover"></button>'; }).join('') + '</div></section></div></div>' +
+      suggestPanel(p) +
       marketPanels(p) +
       '<section class="panel"><div class="panel__h"><div><h2 class="h3">Les sides du projet</h2><p class="small">Pour chaque side : son état, la personne qui le porte, et les métiers que le site affiche comme recherchés.</p></div>' +
       '<div class="seg" role="group" aria-label="Filtrer les sides">' + [['tous', 'Tous (' + DB.domains.length + ')'], ['req', 'Requis (' + c.req + ')'], ['open', 'À compléter (' + (c.open + c.part) + ')']].map(function (x) { return '<button type="button" data-act="sf" data-v="' + x[0] + '" aria-pressed="' + (SF === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
@@ -527,6 +785,46 @@
       }).join('') + '</div></section>' +
       '<div class="row"><button class="btn btn--line" data-act="delp" id="delp">Supprimer le projet</button></div>');
   }
+  /* ----- Sides touchés et personnes suggérées (moteur) ----- */
+  function projectAnalysis(p) {
+    if (p.answers) return analyze(p.answers, SECTOR_EXTRA[p.answers.secteur]);
+    if (p.market) return analyzeMarket(p.market, DB);
+    var extra = {}; Object.keys(p.sides).forEach(function (k) { if (p.sides[k].s !== 'na') extra[k] = [3, 'Side déjà requis par le projet']; });
+    return analyze({}, extra);
+  }
+  function suggestPanel(p) {
+    var r = projectAnalysis(p);
+    var src = p.answers ? 'Calculé à partir des réponses du formulaire « Déposer un projet ».' : p.market ? 'Calculé à partir de la fiche marché (secteur, solution, produit, modules).' : 'Calculé à partir des sides déjà requis.';
+    var who = p.submitter ? '<p class="small">Déposé par <b>' + esc(p.submitter.name) + '</b> · <span class="sel">' + esc(p.submitter.email) + '</span> · ' + esc(p.submitter.when) + '</p>' : '';
+    if (!r.list.length) return '<section class="panel"><h2 class="h3">Sides touchés et personnes suggérées</h2><p class="small">Pas encore assez d’informations pour suggérer des sides.</p></section>';
+    return '<section class="panel"><div class="panel__h"><div><h2 class="h3">Sides touchés et personnes suggérées</h2><p class="small">' + src + '</p>' + who + '</div><button class="btn btn--bord btn--sm" data-act="applysug">Ouvrir les sides suggérés</button></div>' +
+      '<div class="tbl"><table><thead><tr><th>Side</th><th>Niveau</th><th>État</th><th>Personnes du cercle</th><th>Métiers à trouver</th></tr></thead><tbody>' +
+      r.list.slice(0, 12).map(function (x) {
+        var s = sideOf(p, x.d), ppl = r.members.filter(function (mm) { return mm.ds.indexOf(x.d.id) > -1; }).slice(0, 3), miss = r.missing.filter(function (y) { return y.d.id === x.d.id; });
+        return '<tr><td><b><span class="num" style="font-size:15px">' + pad(x.d.n) + '</span> ' + esc(x.d.t) + '</b><br><span class="small">' + esc(x.reasons.join(' · ')) + '</span></td><td><span class="lvl lvl--' + slug(x.level) + '">' + x.level + '</span></td><td>' + st(s.s) + '</td>' +
+          '<td><div class="chips">' + (ppl.length ? ppl.map(function (mm) { var on = s.lead === mm.m.id; return '<button type="button" class="chip" data-act="assign" data-d="' + x.d.id + '" data-m="' + mm.m.id + '" aria-pressed="' + on + '" title="' + esc(mm.m.metier) + '">' + (on ? 'Confié à ' : 'Confier à ') + esc(mm.m.name) + '</button>'; }).join('') : '<span class="small">Personne pour l’instant</span>') + '</div></td>' +
+          '<td><div class="chips">' + miss.slice(0, 3).map(function (y) { return '<span class="chip chip--open">' + esc(y.job) + '</span>'; }).join('') + '</div></td></tr>';
+      }).join('') + '</tbody></table></div></section>';
+  }
+  ACT.applysug = function () {
+    var p = proj(hash()), r = projectAnalysis(p), n = 0;
+    r.list.forEach(function (x) {
+      if (x.score < 3) return;
+      var s = sideOf(p, x.d);
+      if (s.s === 'na') { s.s = 'open'; n++; }
+      if (!s.open || !s.open.length) { var miss = r.missing.filter(function (y) { return y.d.id === x.d.id; }).map(function (y) { return y.job; }); s.open = (miss.length ? miss : x.d.metiers).slice(0, 2); }
+    });
+    save(); aProjet(); toast(n ? n + ' side(s) ouvert(s)' : 'Les sides suggérés sont déjà ouverts');
+  };
+  ACT.assign = function (b) {
+    var p = proj(hash()), d = dom(b.dataset.d), m = mem(b.dataset.m), s = sideOf(p, d);
+    if (s.lead === m.id) { s.lead = null; save(); aProjet(); toast('Side ' + pad(d.n) + ' : responsable retiré'); return; }
+    s.lead = m.id;
+    s.open = (s.open || []).filter(function (o) { return norm(o) !== norm(m.metier); });
+    s.s = s.open.length ? 'part' : 'ok';
+    save(); aProjet(); toast('Side ' + pad(d.n) + ' confié à ' + m.name);
+  };
+
   /* ----- Fiche marché et contact (colonnes du plan d'action) ----- */
   var MK = [['id', 'Identifiant'], ['sector', 'Secteur'], ['domain', 'Domaine'], ['subdomain', 'Sous-domaine'], ['micro', 'Micro-niche'], ['nano', 'Nano-niche', 1], ['city', 'Ville'], ['score', 'Score exploratoire'], ['priority', 'Priorité', 0, ['A', 'B', 'C']],
     ['hypothesis', 'Hypothèse de problème'], ['probleme', 'Problème central', 1], ['preuve', 'Preuve à collecter', 1], ['source', 'Source documentaire', 1], ['solution', 'Solution agence'], ['produit', 'Produit SaaS'], ['modules', 'Modules MVP', 1], ['kpi', 'KPI à mesurer', 1],
@@ -585,7 +883,7 @@
       '<p class="lead" style="max-width:52ch">Le modèle décrit tous les côtés possibles d’un projet. Chaque projet reprend ce modèle et indique, side par side, ce qui est couvert et ce qui manque.</p>' +
       '<div class="g2" style="grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr)"><section class="panel"><h2 class="h3">Sides</h2>' +
       DB.poles.map(function (pl) { return '<p class="lbl" style="margin-top:6px">' + esc(pl.t) + '</p><ul class="tlist">' + pl.d.map(dom).filter(Boolean).map(function (d) { return '<li style="' + (d === cur ? 'background:var(--panel2);box-shadow:inset 2px 0 0 var(--achira)' : '') + '"><a href="#' + d.id + '" data-act="pickd" data-d="' + d.id + '" class="grow"><span class="num" style="font-size:15px">' + pad(d.n) + '</span> ' + esc(d.t) + '</a>' + (d.added ? '<span class="tag-new">ajout</span>' : '') + '</li>'; }).join('') + '</ul>'; }).join('') +
-      '</section><section class="panel"><div class="panel__h"><h2 class="h3">Side ' + pad(cur.n) + '</h2>' + (cur.added ? '<span class="tag-new">ajouté au schéma</span>' : '<span class="small">Issu du schéma PROJET</span>') + '</div>' +
+      '</section><section class="panel"><div class="panel__h"><h2 class="h3">Side ' + pad(cur.n) + '</h2>' + (cur.added ? '<span class="tag-new">ajouté au schéma</span>' : '<span class="small">' + esc(cur.ref || '') + ' · arbre des métiers</span>') + '</div>' +
       '<div class="field"><label for="m-t">Nom du side</label><input type="text" id="m-t" data-ch="mt" value="' + esc(cur.t) + '"></div>' +
       '<div class="field"><span class="lbl">Missions</span><ul class="tlist">' + (function flat(list, sub, path) { return list.map(function (x, i) { var n = tnode(x), pth = path.concat(i); return '<li class="' + (sub ? 'sub' : '') + '"><span class="grow">' + (n.k === 'grp' ? '<span class="lbl" style="color:var(--champ)">' + esc(n.t) + '</span>' : esc(n.t)) + '</span>' + (!sub ? '<button class="icon" type="button" data-act="rmt" data-i="' + i + '" aria-label="Retirer ' + esc(n.t) + '">×</button>' : '') + '</li>' + (n.c && n.c.length ? flat(n.c, true, pth) : ''); }).join(''); })(cur.tasks, false, []) + '</ul>' +
       '<div class="addrow"><input type="text" id="m-add" placeholder="Nouvelle mission" aria-label="Nouvelle mission"><button class="btn btn--line btn--sm" data-act="addt">Ajouter</button></div></div>' +
@@ -620,10 +918,10 @@
   function aMembres() {
     admin('Contenu', 'Membres', '',
       '<section class="panel"><div class="tbl"><table><thead><tr><th>Membre</th><th>Métier</th><th>Statut</th><th>Sides</th><th></th></tr></thead><tbody>' +
-      DB.members.map(function (m) { return '<tr><td><div class="pname">' + avatar(m, true) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.city) + '</span></div></div></td><td>' + esc(m.metier) + '</td><td>' + esc(m.type) + '</td><td><div class="chips">' + m.domains.map(dom).filter(Boolean).map(function (d) { return '<span class="chip" title="' + esc(d.t) + '">' + pad(d.n) + '</span>'; }).join('') + '</div></td><td><button class="icon" data-act="rmm" data-id="' + m.id + '" aria-label="Retirer ' + esc(m.name) + '">×</button></td></tr>'; }).join('') +
+      DB.members.map(function (m) { return '<tr><td><div class="pname">' + avatar(m, true) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.city) + '</span></div></div></td><td>' + esc(m.metier) + '</td><td>' + esc(m.type) + '</td><td><div class="chips">' + memberDomainsIn(DB, m).map(dom).filter(Boolean).map(function (d) { return '<span class="chip" title="' + esc(d.t) + '">' + pad(d.n) + '</span>'; }).join('') + '</div></td><td><button class="icon" data-act="rmm" data-id="' + m.id + '" aria-label="Retirer ' + esc(m.name) + '">×</button></td></tr>'; }).join('') +
       '</tbody></table></div></section>' +
       '<section class="panel"><h2 class="h3">Ajouter un membre</h2><div class="form">' +
-      '<div class="field"><label for="n-name">Nom</label><input type="text" id="n-name"></div><div class="field"><label for="n-metier">Métier</label><input type="text" id="n-metier"></div>' +
+      '<div class="field"><label for="n-name">Nom</label><input type="text" id="n-name"></div><div class="field"><label for="n-metier">Métier (de l’arbre)</label><input type="text" id="n-metier" list="n-jobs" placeholder="Ex. Comptable, Designer…"><datalist id="n-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist></div>' +
       '<div class="field"><label for="n-type">Statut</label><select id="n-type">' + DB.pros.map(function (p) { return '<option>' + p + '</option>'; }).join('') + '</select></div><div class="field"><label for="n-city">Ville</label><input type="text" id="n-city"></div>' +
       '<div class="field full"><label for="n-bio">Bio courte</label><input type="text" id="n-bio"></div>' +
       '<div class="field full"><span class="lbl">Sides qu’il ou elle peut porter</span><div class="chips">' + DB.domains.map(function (d) { return '<button type="button" class="chip" data-act="nd" data-d="' + d.id + '" aria-pressed="' + (NEWD.indexOf(d.id) > -1) + '">' + pad(d.n) + ' ' + esc(d.t) + '</button>'; }).join('') + '</div></div>' +
@@ -690,7 +988,7 @@
   };
 
   /* ---------- Démarrage ---------- */
-  var PAGES = { home: pHome, sides: pSides, projets: pProjets, projet: pProjet, metiers: pMetiers, cercle: pCercle, membres: pMembres, rejoindre: pRejoindre,
+  var PAGES = { home: pHome, sides: pSides, deposer: pDeposer, projets: pProjets, projet: pProjet, metiers: pMetiers, cercle: pCercle, membres: pMembres, rejoindre: pRejoindre,
     'admin-dash': aDash, 'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages };
   (PAGES[PAGE] || pHome)();
   window.addEventListener('hashchange', function () {
@@ -698,5 +996,6 @@
     else if (PAGE === 'admin-projet') aProjet();
     else if (PAGE === 'admin-modele') aModele();
     else if (PAGE === 'metiers') { F.d = dom(hash()) ? hash() : ''; pMetiers(); }
+    else if (PAGE === 'membres') pMembres();
   });
 })();

@@ -128,6 +128,15 @@ Chaque side porte : ses missions (arborescentes), ses compétences requises, ses
 
 **Spécialité ACHIRA** : chaque projet a un interrupteur « logo ACHIRA » (activé / désactivé) et un champ texte « spécialité ». Le logo activé marque les projets intéressants : badge sur la carte et la page publique, filtre dans la dashboard, présence dans la matrice des sides.
 
+**Arbre des métiers et domaines (source unique)** : `donnees/arbre_metiers_domaines_maroc.json` (schéma 1.0) — secteurs → domaines (sides) → tâches ; compétences et métiers reliés aux domaines par les relations `REQUIRES_SKILL` et `PERFORMED_BY` ; modes d'exercice des métiers (salarié, indépendant, cabinet, à titre indicatif). La base de données reprend ces nœuds et relations tels quels (garder les identifiants) ; le schéma d'extension prévoit `subdomain`, `specialty`, `service`, `problem`, `solution`, `company` et les relations `CHILD_OF`, `SOLVES`, `DELIVERED_AS`, `AUTOMATED_BY`.
+
+**Tout est relié** : projet / marché → sides touchés → métiers (PERFORMED_BY) → membres (chaque membre a un métier de l'arbre, qui le relie automatiquement aux sides).
+- **Déposer un projet** (`/deposer`) : parcours interactif en 7 questions (secteur, stade, offre, clients, équipe, argent, visibilité). Chaque réponse pondère des sides ; le panneau de droite se met à jour en direct : sides classés (Prioritaire / Important / Utile, avec la raison), personnes du cercle suggérées, métiers à trouver. L'envoi crée un projet « déposé » en brouillon dans la dashboard, avec ses sides ouverts.
+- **Marchés** : le même moteur calcule les sides d'un marché à partir de sa fiche (secteur, solution, produit, modules) ; règles sectorielles (ex. santé → conformité CNDP).
+- **Dashboard, fiche projet** : panneau « Sides touchés et personnes suggérées » — « Ouvrir les sides suggérés », « Confier à [membre] » (le membre devient responsable, le métier sort des postes recherchés).
+- **Recherche globale** (bouton loupe, touche `/` ou Ctrl+K) sur le site et la dashboard : sides, missions, compétences, métiers (avec nombre de membres), membres, projets (et marchés côté dashboard).
+- **Membres** : recherche, filtre par métier (`/membres#job-comptable`), sides déduits du métier.
+
 Maquette de référence : dossier `maquette/` (ouvrir `maquette/index.html`).
 
 ---

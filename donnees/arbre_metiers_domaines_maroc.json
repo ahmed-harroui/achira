@@ -1,0 +1,2420 @@
+{
+  "schema_version": "1.0",
+  "country": "MA",
+  "note": "Structuration des éléments fournis par utilisateur. Regroupement sectoriel proposé. Les modes d’exercice sont des catégories possibles, pas des attestations d’habilitation professionnelle.",
+  "sectors": [
+    {
+      "id": "sector-finance",
+      "label": "Finance et gestion",
+      "type": "sector"
+    },
+    {
+      "id": "sector-creative",
+      "label": "Mode, artisanat et commerce",
+      "type": "sector"
+    }
+  ],
+  "domains": [
+    {
+      "id": "domain-01",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Tenue des comptes et saisie",
+      "tasks": [
+        {
+          "id": "domain-01-task-01",
+          "type": "task",
+          "label": "Comptabilité clients",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-02",
+          "type": "task",
+          "label": "Comptabilité fournisseurs",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-03",
+          "type": "task",
+          "label": "Gestion des factures et avoirs",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-04",
+          "type": "task",
+          "label": "Rapprochements bancaires",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-05",
+          "type": "task",
+          "label": "Immobilisations et amortissements",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-06",
+          "type": "task",
+          "label": "Écritures de régularisation",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-07",
+          "type": "task",
+          "label": "Clôture mensuelle et annuelle",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-08",
+          "type": "task",
+          "label": "Bilan et compte de résultat",
+          "parent_id": "domain-01"
+        },
+        {
+          "id": "domain-01-task-09",
+          "type": "task",
+          "label": "Révision et justification des comptes",
+          "parent_id": "domain-01"
+        }
+      ]
+    },
+    {
+      "id": "domain-02",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Comptabilité analytique et contrôle de gestion",
+      "tasks": [
+        {
+          "id": "domain-02-task-01",
+          "type": "task",
+          "label": "Comptabilité par projet",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-02",
+          "type": "task",
+          "label": "Comptabilité par centre de coûts",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-03",
+          "type": "task",
+          "label": "Répartition charges directes / indirectes",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-04",
+          "type": "task",
+          "label": "Calcul des coûts de revient",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-05",
+          "type": "task",
+          "label": "Analyse des marges",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-06",
+          "type": "task",
+          "label": "Budgets prévisionnels",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-07",
+          "type": "task",
+          "label": "Analyse des écarts budget / réel",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-08",
+          "type": "task",
+          "label": "Indicateurs de performance",
+          "parent_id": "domain-02"
+        },
+        {
+          "id": "domain-02-task-09",
+          "type": "task",
+          "label": "Reporting de gestion",
+          "parent_id": "domain-02"
+        }
+      ]
+    },
+    {
+      "id": "domain-03",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Fiscalité et obligations déclaratives",
+      "tasks": [
+        {
+          "id": "domain-03-task-01",
+          "type": "task",
+          "label": "TVA collectée et déductible",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-02",
+          "type": "task",
+          "label": "Déclarations de TVA",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-03",
+          "type": "task",
+          "label": "Impôt sur les bénéfices",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-04",
+          "type": "task",
+          "label": "Impôts et taxes de l’activité",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-05",
+          "type": "task",
+          "label": "Retenues à la source",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-06",
+          "type": "task",
+          "label": "Fiscalité internationale",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-07",
+          "type": "task",
+          "label": "Contrôle et régularisation fiscale",
+          "parent_id": "domain-03"
+        },
+        {
+          "id": "domain-03-task-08",
+          "type": "task",
+          "label": "Calendrier des échéances",
+          "parent_id": "domain-03"
+        }
+      ]
+    },
+    {
+      "id": "domain-04",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Trésorerie et financement",
+      "tasks": [
+        {
+          "id": "domain-04-task-01",
+          "type": "task",
+          "label": "Plan de trésorerie",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-02",
+          "type": "task",
+          "label": "Prévisions des encaissements",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-03",
+          "type": "task",
+          "label": "Prévisions des décaissements",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-04",
+          "type": "task",
+          "label": "Suivi des soldes bancaires",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-05",
+          "type": "task",
+          "label": "Gestion des retards de paiement",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-06",
+          "type": "task",
+          "label": "Financement bancaire",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-07",
+          "type": "task",
+          "label": "Recherche de financements",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-08",
+          "type": "task",
+          "label": "Besoin en fonds de roulement",
+          "parent_id": "domain-04"
+        },
+        {
+          "id": "domain-04-task-09",
+          "type": "task",
+          "label": "Scénarios de trésorerie",
+          "parent_id": "domain-04"
+        }
+      ]
+    },
+    {
+      "id": "domain-05",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Facturation et gestion commerciale",
+      "tasks": [
+        {
+          "id": "domain-05-task-01",
+          "type": "task",
+          "label": "Devis et commandes",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-02",
+          "type": "task",
+          "label": "Émission des factures",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-03",
+          "type": "task",
+          "label": "Facturation électronique",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-04",
+          "type": "task",
+          "label": "Acomptes et paiements partiels",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-05",
+          "type": "task",
+          "label": "Suivi des impayés",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-06",
+          "type": "task",
+          "label": "Relances clients",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-07",
+          "type": "task",
+          "label": "Litiges de facturation",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-08",
+          "type": "task",
+          "label": "Conditions de paiement",
+          "parent_id": "domain-05"
+        },
+        {
+          "id": "domain-05-task-09",
+          "type": "task",
+          "label": "Reconnaissance du chiffre d’affaires",
+          "parent_id": "domain-05"
+        }
+      ]
+    },
+    {
+      "id": "domain-06",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Paie et charges sociales",
+      "tasks": [
+        {
+          "id": "domain-06-task-01",
+          "type": "task",
+          "label": "Collecte des variables de paie",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-02",
+          "type": "task",
+          "label": "Bulletins de salaire",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-03",
+          "type": "task",
+          "label": "Cotisations sociales",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-04",
+          "type": "task",
+          "label": "Déclarations sociales",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-05",
+          "type": "task",
+          "label": "Congés et absences",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-06",
+          "type": "task",
+          "label": "Primes et avantages",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-07",
+          "type": "task",
+          "label": "Entrées et sorties du personnel",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-08",
+          "type": "task",
+          "label": "Coût salarial par projet",
+          "parent_id": "domain-06"
+        },
+        {
+          "id": "domain-06-task-09",
+          "type": "task",
+          "label": "Coordination organismes sociaux",
+          "parent_id": "domain-06"
+        }
+      ]
+    },
+    {
+      "id": "domain-07",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Juridique financier et contrats",
+      "tasks": [
+        {
+          "id": "domain-07-task-01",
+          "type": "task",
+          "label": "Choix de la structure juridique",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-02",
+          "type": "task",
+          "label": "Création et modification d’entreprise",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-03",
+          "type": "task",
+          "label": "Contrats fournisseurs",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-04",
+          "type": "task",
+          "label": "Contrats clients",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-05",
+          "type": "task",
+          "label": "Contrats de prestation",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-06",
+          "type": "task",
+          "label": "Clauses de paiement",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-07",
+          "type": "task",
+          "label": "Suivi des obligations contractuelles",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-08",
+          "type": "task",
+          "label": "Approbation des comptes",
+          "parent_id": "domain-07"
+        },
+        {
+          "id": "domain-07-task-09",
+          "type": "task",
+          "label": "Secrétariat juridique",
+          "parent_id": "domain-07"
+        }
+      ]
+    },
+    {
+      "id": "domain-08",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Audit, contrôle interne et conformité",
+      "tasks": [
+        {
+          "id": "domain-08-task-01",
+          "type": "task",
+          "label": "Contrôle des pièces justificatives",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-02",
+          "type": "task",
+          "label": "Séparation des tâches",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-03",
+          "type": "task",
+          "label": "Gestion des habilitations",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-04",
+          "type": "task",
+          "label": "Pistes d’audit",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-05",
+          "type": "task",
+          "label": "Préparation d’audit externe",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-06",
+          "type": "task",
+          "label": "Contrôle de cohérence des comptes",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-07",
+          "type": "task",
+          "label": "Détection des anomalies",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-08",
+          "type": "task",
+          "label": "Gestion documentaire",
+          "parent_id": "domain-08"
+        },
+        {
+          "id": "domain-08-task-09",
+          "type": "task",
+          "label": "Conformité réglementaire",
+          "parent_id": "domain-08"
+        }
+      ]
+    },
+    {
+      "id": "domain-09",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Systèmes d’information comptable",
+      "tasks": [
+        {
+          "id": "domain-09-task-01",
+          "type": "task",
+          "label": "Choix du logiciel comptable",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-02",
+          "type": "task",
+          "label": "Configuration du plan comptable",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-03",
+          "type": "task",
+          "label": "Paramétrage des taxes",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-04",
+          "type": "task",
+          "label": "Intégration bancaire",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-05",
+          "type": "task",
+          "label": "Automatisation des factures",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-06",
+          "type": "task",
+          "label": "Connexion avec l’ERP",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-07",
+          "type": "task",
+          "label": "Migration des données",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-08",
+          "type": "task",
+          "label": "Tableaux de bord financiers",
+          "parent_id": "domain-09"
+        },
+        {
+          "id": "domain-09-task-09",
+          "type": "task",
+          "label": "Gestion des accès et sauvegardes",
+          "parent_id": "domain-09"
+        }
+      ]
+    },
+    {
+      "id": "domain-10",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Achats et gestion fournisseurs",
+      "tasks": [
+        {
+          "id": "domain-10-task-01",
+          "type": "task",
+          "label": "Référencement des fournisseurs",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-02",
+          "type": "task",
+          "label": "Demandes d’achat",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-03",
+          "type": "task",
+          "label": "Validation des dépenses",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-04",
+          "type": "task",
+          "label": "Commandes fournisseurs",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-05",
+          "type": "task",
+          "label": "Contrôle des factures",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-06",
+          "type": "task",
+          "label": "Rapprochement commande-livraison-facture",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-07",
+          "type": "task",
+          "label": "Suivi des contrats fournisseurs",
+          "parent_id": "domain-10"
+        },
+        {
+          "id": "domain-10-task-08",
+          "type": "task",
+          "label": "Échéances de paiement",
+          "parent_id": "domain-10"
+        }
+      ]
+    },
+    {
+      "id": "domain-11",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Gestion des risques financiers",
+      "tasks": [
+        {
+          "id": "domain-11-task-01",
+          "type": "task",
+          "label": "Risque de trésorerie",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-02",
+          "type": "task",
+          "label": "Risque de crédit client",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-03",
+          "type": "task",
+          "label": "Risque de change",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-04",
+          "type": "task",
+          "label": "Fraude et détournement",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-05",
+          "type": "task",
+          "label": "Erreurs comptables",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-06",
+          "type": "task",
+          "label": "Dépendance fournisseur",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-07",
+          "type": "task",
+          "label": "Assurances de l’activité",
+          "parent_id": "domain-11"
+        },
+        {
+          "id": "domain-11-task-08",
+          "type": "task",
+          "label": "Plans de continuité financière",
+          "parent_id": "domain-11"
+        }
+      ]
+    },
+    {
+      "id": "domain-12",
+      "parent_id": "sector-finance",
+      "type": "domain",
+      "label": "Conseil financier et pilotage",
+      "tasks": [
+        {
+          "id": "domain-12-task-01",
+          "type": "task",
+          "label": "Business plan",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-02",
+          "type": "task",
+          "label": "Prévisionnel financier",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-03",
+          "type": "task",
+          "label": "Plan de financement initial",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-04",
+          "type": "task",
+          "label": "Plan de financement long terme",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-05",
+          "type": "task",
+          "label": "Scénarios de rentabilité",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-06",
+          "type": "task",
+          "label": "Évaluation des investissements",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-07",
+          "type": "task",
+          "label": "Analyse du seuil de rentabilité",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-08",
+          "type": "task",
+          "label": "Recherche de subventions",
+          "parent_id": "domain-12"
+        },
+        {
+          "id": "domain-12-task-09",
+          "type": "task",
+          "label": "Conseil financier stratégique",
+          "parent_id": "domain-12"
+        }
+      ]
+    },
+    {
+      "id": "domain-13",
+      "parent_id": "sector-creative",
+      "type": "domain",
+      "label": "Création et design",
+      "tasks": [
+        {
+          "id": "domain-13-task-01",
+          "type": "task",
+          "label": "Direction artistique",
+          "parent_id": "domain-13"
+        },
+        {
+          "id": "domain-13-task-02",
+          "type": "task",
+          "label": "Design produit",
+          "parent_id": "domain-13"
+        },
+        {
+          "id": "domain-13-task-03",
+          "type": "task",
+          "label": "Prototypage",
+          "parent_id": "domain-13"
+        },
+        {
+          "id": "domain-13-task-04",
+          "type": "task",
+          "label": "Identité visuelle",
+          "parent_id": "domain-13"
+        },
+        {
+          "id": "domain-13-task-05",
+          "type": "task",
+          "label": "Photographie produit",
+          "parent_id": "domain-13"
+        },
+        {
+          "id": "domain-13-task-06",
+          "type": "task",
+          "label": "Packaging",
+          "parent_id": "domain-13"
+        }
+      ]
+    },
+    {
+      "id": "domain-14",
+      "parent_id": "sector-creative",
+      "type": "domain",
+      "label": "Production et fabrication",
+      "tasks": [
+        {
+          "id": "domain-14-task-01",
+          "type": "task",
+          "label": "Sourcing des matières",
+          "parent_id": "domain-14"
+        },
+        {
+          "id": "domain-14-task-02",
+          "type": "task",
+          "label": "Fabrication en atelier",
+          "parent_id": "domain-14"
+        },
+        {
+          "id": "domain-14-task-03",
+          "type": "task",
+          "label": "Contrôle qualité",
+          "parent_id": "domain-14"
+        },
+        {
+          "id": "domain-14-task-04",
+          "type": "task",
+          "label": "Gestion des stocks",
+          "parent_id": "domain-14"
+        },
+        {
+          "id": "domain-14-task-05",
+          "type": "task",
+          "label": "Logistique et livraison",
+          "parent_id": "domain-14"
+        },
+        {
+          "id": "domain-14-task-06",
+          "type": "task",
+          "label": "Retouches et réparations",
+          "parent_id": "domain-14"
+        }
+      ]
+    },
+    {
+      "id": "domain-15",
+      "parent_id": "sector-creative",
+      "type": "domain",
+      "label": "Marketing et communication",
+      "tasks": [
+        {
+          "id": "domain-15-task-01",
+          "type": "task",
+          "label": "Stratégie de marque",
+          "parent_id": "domain-15"
+        },
+        {
+          "id": "domain-15-task-02",
+          "type": "task",
+          "label": "Réseaux sociaux",
+          "parent_id": "domain-15"
+        },
+        {
+          "id": "domain-15-task-03",
+          "type": "task",
+          "label": "Contenus photo et vidéo",
+          "parent_id": "domain-15"
+        },
+        {
+          "id": "domain-15-task-04",
+          "type": "task",
+          "label": "Événements et rencontres",
+          "parent_id": "domain-15"
+        },
+        {
+          "id": "domain-15-task-05",
+          "type": "task",
+          "label": "Relations presse",
+          "parent_id": "domain-15"
+        },
+        {
+          "id": "domain-15-task-06",
+          "type": "task",
+          "label": "Partenariats",
+          "parent_id": "domain-15"
+        }
+      ]
+    },
+    {
+      "id": "domain-16",
+      "parent_id": "sector-creative",
+      "type": "domain",
+      "label": "Digital et outils",
+      "tasks": [
+        {
+          "id": "domain-16-task-01",
+          "type": "task",
+          "label": "Site web et e-commerce",
+          "parent_id": "domain-16"
+        },
+        {
+          "id": "domain-16-task-02",
+          "type": "task",
+          "label": "Paiement en ligne",
+          "parent_id": "domain-16"
+        },
+        {
+          "id": "domain-16-task-03",
+          "type": "task",
+          "label": "Hébergement et sécurité",
+          "parent_id": "domain-16"
+        },
+        {
+          "id": "domain-16-task-04",
+          "type": "task",
+          "label": "Données et mesure d’audience",
+          "parent_id": "domain-16"
+        },
+        {
+          "id": "domain-16-task-05",
+          "type": "task",
+          "label": "Outils internes",
+          "parent_id": "domain-16"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "skill-e19d1098",
+      "type": "skill",
+      "label": "Saisie comptable"
+    },
+    {
+      "id": "skill-4586e3d0",
+      "type": "skill",
+      "label": "Lettrage"
+    },
+    {
+      "id": "skill-13a71a08",
+      "type": "skill",
+      "label": "Rapprochement"
+    },
+    {
+      "id": "skill-213a12ed",
+      "type": "skill",
+      "label": "Clôture des comptes"
+    },
+    {
+      "id": "skill-67e277e5",
+      "type": "skill",
+      "label": "Normes CGNC"
+    },
+    {
+      "id": "skill-493c41af",
+      "type": "skill",
+      "label": "Calcul de coûts"
+    },
+    {
+      "id": "skill-f5f5068f",
+      "type": "skill",
+      "label": "Budgétisation"
+    },
+    {
+      "id": "skill-af106fcd",
+      "type": "skill",
+      "label": "Analyse d’écarts"
+    },
+    {
+      "id": "skill-986adedc",
+      "type": "skill",
+      "label": "Tableurs et BI"
+    },
+    {
+      "id": "skill-16c80009",
+      "type": "skill",
+      "label": "Reporting"
+    },
+    {
+      "id": "skill-1b3aff71",
+      "type": "skill",
+      "label": "TVA"
+    },
+    {
+      "id": "skill-8b38a214",
+      "type": "skill",
+      "label": "IS et IR"
+    },
+    {
+      "id": "skill-8263cf62",
+      "type": "skill",
+      "label": "Télédéclaration SIMPL"
+    },
+    {
+      "id": "skill-63f9e45a",
+      "type": "skill",
+      "label": "Veille fiscale"
+    },
+    {
+      "id": "skill-c5043c05",
+      "type": "skill",
+      "label": "Prévision de trésorerie"
+    },
+    {
+      "id": "skill-0ce99a39",
+      "type": "skill",
+      "label": "Relation bancaire"
+    },
+    {
+      "id": "skill-33a6b852",
+      "type": "skill",
+      "label": "Gestion du BFR"
+    },
+    {
+      "id": "skill-778b9b03",
+      "type": "skill",
+      "label": "Modélisation"
+    },
+    {
+      "id": "skill-ded0c8b2",
+      "type": "skill",
+      "label": "Facturation"
+    },
+    {
+      "id": "skill-a2a10502",
+      "type": "skill",
+      "label": "Recouvrement"
+    },
+    {
+      "id": "skill-207b90f2",
+      "type": "skill",
+      "label": "Négociation"
+    },
+    {
+      "id": "skill-c750d407",
+      "type": "skill",
+      "label": "Outils de facturation"
+    },
+    {
+      "id": "skill-b68d5f57",
+      "type": "skill",
+      "label": "Droit du travail"
+    },
+    {
+      "id": "skill-43f579ef",
+      "type": "skill",
+      "label": "Calcul de paie"
+    },
+    {
+      "id": "skill-a0e8aa5b",
+      "type": "skill",
+      "label": "Déclarations CNSS et AMO"
+    },
+    {
+      "id": "skill-d2f69ebf",
+      "type": "skill",
+      "label": "Logiciel de paie"
+    },
+    {
+      "id": "skill-024c1be5",
+      "type": "skill",
+      "label": "Droit des sociétés"
+    },
+    {
+      "id": "skill-e55481b3",
+      "type": "skill",
+      "label": "Rédaction de contrats"
+    },
+    {
+      "id": "skill-e66308be",
+      "type": "skill",
+      "label": "Secrétariat juridique"
+    },
+    {
+      "id": "skill-84f29881",
+      "type": "skill",
+      "label": "Contrôle interne"
+    },
+    {
+      "id": "skill-a3fc41ed",
+      "type": "skill",
+      "label": "Analyse des risques"
+    },
+    {
+      "id": "skill-88c55503",
+      "type": "skill",
+      "label": "Normes d’audit"
+    },
+    {
+      "id": "skill-822848de",
+      "type": "skill",
+      "label": "Rigueur documentaire"
+    },
+    {
+      "id": "skill-e67e708e",
+      "type": "skill",
+      "label": "Paramétrage ERP"
+    },
+    {
+      "id": "skill-0a68facf",
+      "type": "skill",
+      "label": "Migration de données"
+    },
+    {
+      "id": "skill-eea5236f",
+      "type": "skill",
+      "label": "Automatisation"
+    },
+    {
+      "id": "skill-47f79f02",
+      "type": "skill",
+      "label": "Sécurité des accès"
+    },
+    {
+      "id": "skill-7fd8b611",
+      "type": "skill",
+      "label": "Sourcing"
+    },
+    {
+      "id": "skill-56be2984",
+      "type": "skill",
+      "label": "Gestion des contrats"
+    },
+    {
+      "id": "skill-9b9e982f",
+      "type": "skill",
+      "label": "Contrôle des factures"
+    },
+    {
+      "id": "skill-22e3887d",
+      "type": "skill",
+      "label": "Cartographie des risques"
+    },
+    {
+      "id": "skill-efb2ce51",
+      "type": "skill",
+      "label": "Assurances"
+    },
+    {
+      "id": "skill-5537938f",
+      "type": "skill",
+      "label": "Analyse crédit"
+    },
+    {
+      "id": "skill-853939cb",
+      "type": "skill",
+      "label": "Prévention de la fraude"
+    },
+    {
+      "id": "skill-fee42a46",
+      "type": "skill",
+      "label": "Business plan"
+    },
+    {
+      "id": "skill-4037bf49",
+      "type": "skill",
+      "label": "Modélisation financière"
+    },
+    {
+      "id": "skill-4bf704ee",
+      "type": "skill",
+      "label": "Évaluation d’investissements"
+    },
+    {
+      "id": "skill-5b9179c8",
+      "type": "skill",
+      "label": "Recherche de financements"
+    },
+    {
+      "id": "skill-bb42bf0c",
+      "type": "skill",
+      "label": "Dessin et patronage"
+    },
+    {
+      "id": "skill-f20d619d",
+      "type": "skill",
+      "label": "Direction artistique"
+    },
+    {
+      "id": "skill-80a0e9ca",
+      "type": "skill",
+      "label": "Prototypage"
+    },
+    {
+      "id": "skill-84f34784",
+      "type": "skill",
+      "label": "Retouche photo"
+    },
+    {
+      "id": "skill-c2457c80",
+      "type": "skill",
+      "label": "Travail du cuir"
+    },
+    {
+      "id": "skill-2e3aed02",
+      "type": "skill",
+      "label": "Coupe et couture"
+    },
+    {
+      "id": "skill-97789a94",
+      "type": "skill",
+      "label": "Contrôle qualité"
+    },
+    {
+      "id": "skill-9f1d0dcf",
+      "type": "skill",
+      "label": "Planification"
+    },
+    {
+      "id": "skill-4f0872e0",
+      "type": "skill",
+      "label": "Storytelling"
+    },
+    {
+      "id": "skill-2fde143e",
+      "type": "skill",
+      "label": "Réseaux sociaux"
+    },
+    {
+      "id": "skill-c7c3e0ca",
+      "type": "skill",
+      "label": "Tournage et montage"
+    },
+    {
+      "id": "skill-88bbf21d",
+      "type": "skill",
+      "label": "Organisation d’événements"
+    },
+    {
+      "id": "skill-4dbd069c",
+      "type": "skill",
+      "label": "Développement web"
+    },
+    {
+      "id": "skill-c61e8453",
+      "type": "skill",
+      "label": "UX / UI"
+    },
+    {
+      "id": "skill-506689ae",
+      "type": "skill",
+      "label": "Sécurité"
+    },
+    {
+      "id": "skill-ab938459",
+      "type": "skill",
+      "label": "Analyse de données"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job-86ad11e3",
+      "type": "job",
+      "label": "Comptable",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-8a6f6f64",
+      "type": "job",
+      "label": "Assistant comptable",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-18dc41c5",
+      "type": "job",
+      "label": "Chef comptable",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-cba2bbab",
+      "type": "job",
+      "label": "Expert-comptable",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-4fc7f16e",
+      "type": "job",
+      "label": "Contrôleur de gestion",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-5d90b4be",
+      "type": "job",
+      "label": "Analyste financier",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-e99db2d2",
+      "type": "job",
+      "label": "Responsable contrôle de gestion",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-ecc3e320",
+      "type": "job",
+      "label": "Fiscaliste",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-3bba1681",
+      "type": "job",
+      "label": "Conseiller fiscal",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-bf3593d9",
+      "type": "job",
+      "label": "Trésorier",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-29fc7d8c",
+      "type": "job",
+      "label": "Credit manager",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-dbb4b4c7",
+      "type": "job",
+      "label": "Directeur financier",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-0d71057d",
+      "type": "job",
+      "label": "Conseiller bancaire",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-9804966f",
+      "type": "job",
+      "label": "Assistant ADV",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-a6de9a2b",
+      "type": "job",
+      "label": "Chargé de recouvrement",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-cc7a42e6",
+      "type": "job",
+      "label": "Responsable ADV",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-15dd2ddd",
+      "type": "job",
+      "label": "Gestionnaire de paie",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-ebbb6d09",
+      "type": "job",
+      "label": "Responsable RH",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-c15db4c2",
+      "type": "job",
+      "label": "Juriste social",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-1118d7c9",
+      "type": "job",
+      "label": "Juriste d’entreprise",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-27e2be7b",
+      "type": "job",
+      "label": "Avocat d’affaires",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-bc9f6627",
+      "type": "job",
+      "label": "Notaire",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-954d2d1f",
+      "type": "job",
+      "label": "Auditeur interne",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-91bb6eb5",
+      "type": "job",
+      "label": "Commissaire aux comptes",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-e9676066",
+      "type": "job",
+      "label": "Responsable conformité",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-6f656302",
+      "type": "job",
+      "label": "Consultant ERP",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-044e158b",
+      "type": "job",
+      "label": "Développeur",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-413278f2",
+      "type": "job",
+      "label": "Chef de projet SI",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-d403ef69",
+      "type": "job",
+      "label": "Acheteur",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-9df4dfe3",
+      "type": "job",
+      "label": "Responsable achats",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-90b11fe2",
+      "type": "job",
+      "label": "Comptable fournisseurs",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-cf49e271",
+      "type": "job",
+      "label": "Risk manager",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-66871621",
+      "type": "job",
+      "label": "Courtier en assurance",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-bf565df8",
+      "type": "job",
+      "label": "Analyste crédit",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-d4a37030",
+      "type": "job",
+      "label": "Conseiller financier",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-51160657",
+      "type": "job",
+      "label": "DAF à temps partagé",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-6e56498f",
+      "type": "job",
+      "label": "Designer",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-ae65ff44",
+      "type": "job",
+      "label": "Directeur artistique",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-23a8c557",
+      "type": "job",
+      "label": "Photographe",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-f3ba4b62",
+      "type": "job",
+      "label": "Styliste",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-dd091bac",
+      "type": "job",
+      "label": "Artisan",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-6abce8ce",
+      "type": "job",
+      "label": "Tailleur",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-174bfbf1",
+      "type": "job",
+      "label": "Maroquinier",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-0f94cf1a",
+      "type": "job",
+      "label": "Responsable production",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-b46f106b",
+      "type": "job",
+      "label": "Chargé de communication",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-de6a59ba",
+      "type": "job",
+      "label": "Community manager",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-f461390f",
+      "type": "job",
+      "label": "Vidéaste",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-285bb7e1",
+      "type": "job",
+      "label": "Mannequin",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-bf11159a",
+      "type": "job",
+      "label": "Développeur web",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-8d729997",
+      "type": "job",
+      "label": "Designer UX / UI",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    },
+    {
+      "id": "job-2a8070a6",
+      "type": "job",
+      "label": "Data analyst",
+      "engagement_modes": [
+        "salarié",
+        "indépendant",
+        "cabinet"
+      ],
+      "modes_are_default_not_verified": true
+    }
+  ],
+  "relations": [
+    {
+      "from": "domain-01",
+      "to": "skill-e19d1098",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-01",
+      "to": "skill-4586e3d0",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-01",
+      "to": "skill-13a71a08",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-01",
+      "to": "skill-213a12ed",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-01",
+      "to": "skill-67e277e5",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-01",
+      "to": "job-86ad11e3",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-01",
+      "to": "job-8a6f6f64",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-01",
+      "to": "job-18dc41c5",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-01",
+      "to": "job-cba2bbab",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-02",
+      "to": "skill-493c41af",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-02",
+      "to": "skill-f5f5068f",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-02",
+      "to": "skill-af106fcd",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-02",
+      "to": "skill-986adedc",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-02",
+      "to": "skill-16c80009",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-02",
+      "to": "job-4fc7f16e",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-02",
+      "to": "job-5d90b4be",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-02",
+      "to": "job-e99db2d2",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-03",
+      "to": "skill-1b3aff71",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-03",
+      "to": "skill-8b38a214",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-03",
+      "to": "skill-8263cf62",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-03",
+      "to": "skill-63f9e45a",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-03",
+      "to": "job-ecc3e320",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-03",
+      "to": "job-3bba1681",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-03",
+      "to": "job-cba2bbab",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-04",
+      "to": "skill-c5043c05",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-04",
+      "to": "skill-0ce99a39",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-04",
+      "to": "skill-33a6b852",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-04",
+      "to": "skill-778b9b03",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-04",
+      "to": "job-bf3593d9",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-04",
+      "to": "job-29fc7d8c",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-04",
+      "to": "job-dbb4b4c7",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-04",
+      "to": "job-0d71057d",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-05",
+      "to": "skill-ded0c8b2",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-05",
+      "to": "skill-a2a10502",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-05",
+      "to": "skill-207b90f2",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-05",
+      "to": "skill-c750d407",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-05",
+      "to": "job-9804966f",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-05",
+      "to": "job-a6de9a2b",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-05",
+      "to": "job-cc7a42e6",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-06",
+      "to": "skill-b68d5f57",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-06",
+      "to": "skill-43f579ef",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-06",
+      "to": "skill-a0e8aa5b",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-06",
+      "to": "skill-d2f69ebf",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-06",
+      "to": "job-15dd2ddd",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-06",
+      "to": "job-ebbb6d09",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-06",
+      "to": "job-c15db4c2",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-07",
+      "to": "skill-024c1be5",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-07",
+      "to": "skill-e55481b3",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-07",
+      "to": "skill-207b90f2",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-07",
+      "to": "skill-e66308be",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-07",
+      "to": "job-1118d7c9",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-07",
+      "to": "job-27e2be7b",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-07",
+      "to": "job-bc9f6627",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-08",
+      "to": "skill-84f29881",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-08",
+      "to": "skill-a3fc41ed",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-08",
+      "to": "skill-88c55503",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-08",
+      "to": "skill-822848de",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-08",
+      "to": "job-954d2d1f",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-08",
+      "to": "job-91bb6eb5",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-08",
+      "to": "job-e9676066",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-09",
+      "to": "skill-e67e708e",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-09",
+      "to": "skill-0a68facf",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-09",
+      "to": "skill-eea5236f",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-09",
+      "to": "skill-47f79f02",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-09",
+      "to": "job-6f656302",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-09",
+      "to": "job-044e158b",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-09",
+      "to": "job-413278f2",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-10",
+      "to": "skill-7fd8b611",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-10",
+      "to": "skill-207b90f2",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-10",
+      "to": "skill-56be2984",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-10",
+      "to": "skill-9b9e982f",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-10",
+      "to": "job-d403ef69",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-10",
+      "to": "job-9df4dfe3",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-10",
+      "to": "job-90b11fe2",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-11",
+      "to": "skill-22e3887d",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-11",
+      "to": "skill-efb2ce51",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-11",
+      "to": "skill-5537938f",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-11",
+      "to": "skill-853939cb",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-11",
+      "to": "job-cf49e271",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-11",
+      "to": "job-66871621",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-11",
+      "to": "job-bf565df8",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-12",
+      "to": "skill-fee42a46",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-12",
+      "to": "skill-4037bf49",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-12",
+      "to": "skill-4bf704ee",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-12",
+      "to": "skill-5b9179c8",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-12",
+      "to": "job-d4a37030",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-12",
+      "to": "job-51160657",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-12",
+      "to": "job-cba2bbab",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-13",
+      "to": "skill-bb42bf0c",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-13",
+      "to": "skill-f20d619d",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-13",
+      "to": "skill-80a0e9ca",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-13",
+      "to": "skill-84f34784",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-13",
+      "to": "job-6e56498f",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-13",
+      "to": "job-ae65ff44",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-13",
+      "to": "job-23a8c557",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-13",
+      "to": "job-f3ba4b62",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-14",
+      "to": "skill-c2457c80",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-14",
+      "to": "skill-2e3aed02",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-14",
+      "to": "skill-97789a94",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-14",
+      "to": "skill-9f1d0dcf",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-14",
+      "to": "job-dd091bac",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-14",
+      "to": "job-6abce8ce",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-14",
+      "to": "job-174bfbf1",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-14",
+      "to": "job-0f94cf1a",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-15",
+      "to": "skill-4f0872e0",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-15",
+      "to": "skill-2fde143e",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-15",
+      "to": "skill-c7c3e0ca",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-15",
+      "to": "skill-88bbf21d",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-15",
+      "to": "job-b46f106b",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-15",
+      "to": "job-de6a59ba",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-15",
+      "to": "job-f461390f",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-15",
+      "to": "job-285bb7e1",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-16",
+      "to": "skill-4dbd069c",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-16",
+      "to": "skill-c61e8453",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-16",
+      "to": "skill-506689ae",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-16",
+      "to": "skill-ab938459",
+      "type": "REQUIRES_SKILL"
+    },
+    {
+      "from": "domain-16",
+      "to": "job-bf11159a",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-16",
+      "to": "job-8d729997",
+      "type": "PERFORMED_BY"
+    },
+    {
+      "from": "domain-16",
+      "to": "job-2a8070a6",
+      "type": "PERFORMED_BY"
+    }
+  ],
+  "extension_schema": {
+    "possible_node_types": [
+      "sector",
+      "domain",
+      "subdomain",
+      "specialty",
+      "task",
+      "skill",
+      "job",
+      "service",
+      "problem",
+      "solution",
+      "company"
+    ],
+    "possible_relation_types": [
+      "CHILD_OF",
+      "REQUIRES_SKILL",
+      "PERFORMED_BY",
+      "SOLVES",
+      "DELIVERED_AS",
+      "AUTOMATED_BY"
+    ]
+  }
+}
