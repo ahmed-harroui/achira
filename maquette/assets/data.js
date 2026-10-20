@@ -7,9 +7,9 @@ window.ACHIRA_DATA = {
   /* Les sides (domaines, tâches, compétences, métiers) viennent de arbre.js. */
 
   members: [
-    { id: 1, slug: 'ahmed', name: 'Ahmed', metier: 'Tailleur', type: 'Indépendant', city: 'Casablanca', domains: ['d14'], img: 'u-cercle-3', bio: 'Vingt ans d’atelier. Il a monté le premier patron de la Veste Signature.' },
-    { id: 2, slug: 'marouan', name: 'Marouan', metier: 'Photographe', type: 'Indépendant', city: 'Fès', domains: ['d13', 'd15'], img: 'u-cercle-1', bio: 'Elle photographie les mains plus que les visages.' },
-    { id: 3, slug: 'wassim', name: 'Wassim', metier: 'Designer', type: 'Salarié', city: 'Casablanca', domains: ['d13'], img: 'u-cercle-2', bio: 'Designer produit, il dessine le coffret ACHIRA.' },
+    { id: 1, slug: 'ahmed', name: 'Ahmed', metier: 'Développeur web', type: 'Indépendant', city: 'Taza', domains: ['d16'], img: '', bio: 'Construit le site ACHIRA et sa dashboard, de la base de données aux pages.' },
+    { id: 2, slug: 'marouan', name: 'Marouan', metier: 'Consultant SEO', type: 'Indépendant', city: 'Meknès', domains: ['d15', 'd16'], img: '', bio: 'Rend les projets du cercle visibles sur Google : mots-clés, contenus et référencement local.' },
+    { id: 3, slug: 'wassim', name: 'Wassim', metier: 'Développeur web', type: 'Indépendant', city: 'Agadir', domains: ['d16'], img: '', bio: 'Développe les pages du site et les outils du cercle.' },
     { id: 4, slug: 'meriem-a', name: 'Meriem A.', metier: 'Expert-comptable', type: 'Cabinet', city: 'Rabat', domains: ['d1', 'd3', 'd12'], img: '', bio: 'Son cabinet tient les comptes des projets du cercle.' },
     { id: 5, slug: 'othmane-k', name: 'Othmane K.', metier: 'Juriste d’entreprise', type: 'Indépendant', city: 'Casablanca', domains: ['d7'], img: '', bio: 'Statuts, contrats, propriété des créations.' },
     { id: 6, slug: 'sara-d', name: 'Sara D.', metier: 'Développeur web', type: 'Indépendant', city: 'Paris', domains: ['d16', 'd9'], img: '', bio: 'Elle construit les outils du cercle depuis la diaspora.' },

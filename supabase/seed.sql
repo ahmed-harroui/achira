@@ -1,9 +1,9 @@
 -- ACHIRA — données de départ (générées depuis la maquette)
 begin;
 insert into public.members (id, slug, name, metier, job_id, type, city, bio, domains, img) overriding system value values
-(1, 'ahmed', 'Ahmed', 'Tailleur', 'job-6abce8ce', 'Indépendant', 'Casablanca', 'Vingt ans d’atelier. Il a monté le premier patron de la Veste Signature.', '{d14}', 'u-cercle-3'),
-(2, 'marouan', 'Marouan', 'Photographe', 'job-23a8c557', 'Indépendant', 'Fès', 'Elle photographie les mains plus que les visages.', '{d13,d15}', 'u-cercle-1'),
-(3, 'wassim', 'Wassim', 'Designer', 'job-6e56498f', 'Salarié', 'Casablanca', 'Designer produit, il dessine le coffret ACHIRA.', '{d13}', 'u-cercle-2'),
+(1, 'ahmed', 'Ahmed', 'Développeur web', 'job-bf11159a', 'Indépendant', 'Taza', 'Construit le site ACHIRA et sa dashboard, de la base de données aux pages.', '{d16}', null),
+(2, 'marouan', 'Marouan', 'Consultant SEO', null, 'Indépendant', 'Meknès', 'Rend les projets du cercle visibles sur Google : mots-clés, contenus et référencement local.', '{d15,d16}', null),
+(3, 'wassim', 'Wassim', 'Développeur web', 'job-bf11159a', 'Indépendant', 'Agadir', 'Développe les pages du site et les outils du cercle.', '{d16}', null),
 (4, 'meriem-a', 'Meriem A.', 'Expert-comptable', 'job-cba2bbab', 'Cabinet', 'Rabat', 'Son cabinet tient les comptes des projets du cercle.', '{d1,d3,d12}', null),
 (5, 'othmane-k', 'Othmane K.', 'Juriste d’entreprise', 'job-1118d7c9', 'Indépendant', 'Casablanca', 'Statuts, contrats, propriété des créations.', '{d7}', null),
 (6, 'sara-d', 'Sara D.', 'Développeur web', 'job-bf11159a', 'Indépendant', 'Paris', 'Elle construit les outils du cercle depuis la diaspora.', '{d16,d9}', null),
