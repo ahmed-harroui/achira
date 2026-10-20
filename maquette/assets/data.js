@@ -17,7 +17,8 @@ window.ACHIRA_DATA = {
     { id: 8, slug: 'youssef-m', name: 'Youssef M.', metier: 'Contrôleur de gestion', type: 'Indépendant', city: 'Casablanca', domains: ['d2', 'd4'], img: '', bio: 'Coûts de revient, marges, budgets : il rend les chiffres lisibles.' },
     { id: 9, slug: 'hind-b', name: 'Hind B.', metier: 'Gestionnaire de paie', type: 'Cabinet', city: 'Rabat', domains: ['d6'], img: '', bio: 'Son cabinet gère la paie et les déclarations CNSS de petites équipes.' },
     { id: 10, slug: 'amine-r', name: 'Amine R.', metier: 'Community manager', type: 'Indépendant', city: 'Marrakech', domains: ['d15'], img: '', bio: 'Réseaux sociaux et contenus pour le tourisme et la restauration.' },
-    { id: 11, slug: 'rania-t', name: 'Rania T.', metier: 'Conseiller financier', type: 'Salarié', city: 'Tanger', domains: ['d12', 'd4'], img: '', bio: 'Business plans et dossiers de financement pour les jeunes entreprises.' }
+    { id: 11, slug: 'rania-t', name: 'Rania T.', metier: 'Conseiller financier', type: 'Salarié', city: 'Tanger', domains: ['d12', 'd4'], img: '', bio: 'Business plans et dossiers de financement pour les jeunes entreprises.' },
+    { id: 12, slug: 'ilyes', name: 'Ilyes', metier: 'Développeur web', type: 'Indépendant', city: 'Rabat', domains: ['d16'], img: '', bio: 'Sites et outils numériques pour les projets du cercle.' }
   ],
 
   /* s : ok = couvert · part = en partie · open = à pourvoir · na = non requis */
