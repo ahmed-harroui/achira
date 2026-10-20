@@ -300,7 +300,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -322,7 +322,7 @@
     var el = e.target.closest('[data-ch]'); if (!el || !CH[el.dataset.ch]) return;
     var id = el.id, ch = el.dataset.ch;
     CH[ch](el, e);
-    if (/^(fd|fp|mj|asec|asort|wsec)$/.test(ch)) return; // simples filtres : pas d'enregistrement
+    if (/^(fd|fp|mj|asec|asort|wsec|fyjob|fytype)$/.test(ch)) return; // simples filtres : pas d'enregistrement
     setTimeout(function () {
       var f = (id && document.getElementById(id)) || (document.contains(el) ? el : null); if (!f) return;
       var row = f.closest('.srow, tr'); if (row) flash(row);
@@ -639,14 +639,81 @@
   if (PAGE === 'projets' || PAGE === 'sides' || PAGE === 'home') { window.addEventListener('scroll', pinScroll, { passive: true }); }
   function pProjets() {
     shell(pinBg('hero-projets') + '<section class="phero phero--pin"><div class="in"><p class="eyebrow rv">Les projets</p><h1 class="h1 rv">Chaque projet, tous ses côtés.</h1><p class="lead rv" style="max-width:38ch">De l’idée à la pièce finie : la comptabilité, les contrats, l’atelier, l’image. Chaque projet montre ce qui est couvert et ce qui manque.</p></div></section>' +
-      '<section class="band dark band--tight"><div class="in"><div class="toolbar"><div class="chips" role="group" aria-label="Phase">' + ['Tous'].concat(PHASES).map(function (ph) { return '<button class="chip" type="button" data-act="phase" data-v="' + ph + '" aria-pressed="' + (F.phase === ph) + '">' + ph + '</button>'; }).join('') + '</div>' +
-      '<input type="search" id="pq" data-in="pq" placeholder="Rechercher un projet" aria-label="Rechercher un projet" style="max-width:280px;margin-left:auto"></div>' + legend() + '<div class="pgrid" id="results"></div></div></section>');
-    renderProjets();
+      '<section class="band bord band--tight" id="pourtoi"><div class="in" id="fy"></div></section>' +
+      '<section class="band dark band--tight"><div class="in"><div class="head"><p class="eyebrow">Tous les projets</p></div><div class="toolbar"><div class="chips" role="group" aria-label="Phase">' + ['Tous'].concat(PHASES).map(function (ph) { return '<button class="chip" type="button" data-act="phase" data-v="' + ph + '" aria-pressed="' + (F.phase === ph) + '">' + ph + '</button>'; }).join('') + '</div>' +
+      '<input type="search" id="pq" data-in="pq" placeholder="Rechercher un projet" aria-label="Rechercher un projet" style="max-width:280px;margin-left:auto"></div>' +
+      '<div class="chips" role="group" aria-label="Catégorie">' + ['Toutes'].concat(projectCats()).map(function (c) { return '<button class="chip" type="button" data-act="pcat" data-v="' + esc(c) + '" aria-pressed="' + ((F.cat || 'Toutes') === c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+      legend() + '<div class="pgrid" id="results"></div></div></section>');
+    renderFY(); renderProjets();
   }
+  function projectCats() { var l = []; pubProjects().forEach(function (p) { if (p.disc && l.indexOf(p.disc) < 0) l.push(p.disc); }); if (pubProjects().some(function (p) { return p.achira; })) l.push('Spécialités ACHIRA'); return l; }
   function renderProjets() {
-    var l = pubProjects().filter(function (p) { return (F.phase === 'Tous' || p.phase === F.phase) && (!F.q || (p.title + ' ' + p.disc + ' ' + p.place).toLowerCase().indexOf(F.q.toLowerCase()) > -1); });
+    var l = pubProjects().filter(function (p) {
+      var c = F.cat && F.cat !== 'Toutes' ? (F.cat === 'Spécialités ACHIRA' ? p.achira : p.disc === F.cat) : true;
+      return c && (F.phase === 'Tous' || p.phase === F.phase) && (!F.q || (p.title + ' ' + p.disc + ' ' + p.place).toLowerCase().indexOf(F.q.toLowerCase()) > -1);
+    });
     $('#results').innerHTML = l.length ? l.map(pcard).join('') : '<p class="body">Aucun projet ne correspond à ces filtres.</p>';
   }
+  ACT.pcat = function (b) { F.cat = b.dataset.v; $$('[data-act=pcat]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderProjets(); };
+
+  /* ----- « Pour toi » : qui est le visiteur, et les meilleurs projets pour lui ----- */
+  var FYK = 'achira-pour-toi';
+  var FY = (function () { try { return JSON.parse(localStorage.getItem(FYK)) || {}; } catch (e) { return {}; } })();
+  FY.cats = FY.cats || []; FY.phases = FY.phases || [];
+  function fySave() { try { localStorage.setItem(FYK, JSON.stringify(FY)); } catch (e) {} }
+  function fyRank() {
+    return pubProjects().map(function (p) {
+      var score = 0, why = [], help = [];
+      if (FY.mode === 'proposer' && FY.job) {
+        var j = norm(FY.job);
+        DB.domains.forEach(function (d) {
+          var s = p.sides[d.id]; if (!s || s.s === 'na') return;
+          var wanted = (s.open || []).some(function (o) { return norm(o) === j; }), mine = d.metiers.some(function (m) { return norm(m) === j; });
+          if (wanted && s.s !== 'ok') { score += 6; why.push('Ton métier est recherché · side ' + pad(d.n)); help.push(d); }
+          else if (mine && (s.s === 'open' || s.s === 'part')) { score += 3; why.push('Le side ' + pad(d.n) + ' ' + d.t + ' a besoin de renfort'); help.push(d); }
+          else if (mine) { score += 1; why.push('Ton métier intervient sur le side ' + pad(d.n)); }
+        });
+      } else {
+        FY.cats.forEach(function (c) { if (c === 'Spécialités ACHIRA' ? p.achira : p.disc === c) { score += 4; why.push('Catégorie : ' + c); } });
+        if (FY.phases.indexOf(p.phase) > -1) { score += 2; why.push('Phase : ' + p.phase); }
+        if (p.featured) { score += 1; if (!why.length) why.push('À la une du cercle'); }
+        if (p.achira && FY.cats.indexOf('Spécialités ACHIRA') < 0) score += .5;
+      }
+      return { p: p, score: score, why: why, help: help };
+    }).sort(function (a, b) { return b.score - a.score; });
+  }
+  function fyCard(x) {
+    var d = x.help[0];
+    return '<div class="fy-card">' + pcard(x.p) + '<div class="fy-why">' + (x.why.length ? x.why.slice(0, 2).map(function (w) { return '<span>✦ ' + esc(w) + '</span>'; }).join('') : '<span>Un projet du cercle à découvrir</span>') + '</div>' +
+      (FY.mode === 'proposer' && d ? '<a class="btn btn--bord btn--sm" href="rejoindre.html#' + x.p.slug + '.' + d.id + '.' + slug(FY.job) + '">Proposer mon aide</a>' : '') + '</div>';
+  }
+  function renderFY() {
+    var box = $('#fy'); if (!box) return;
+    if (!FY.mode) {
+      box.innerHTML = '<div class="head"><p class="eyebrow">Pour toi</p><h2 class="h2">Tu es là pour…</h2><p class="body">Une réponse, et on te montre les projets qui te correspondent.</p></div>' +
+        '<div class="fy-opts">' +
+        '<button type="button" class="fy-opt" data-act="fymode" data-v="decouvrir"><span class="num">01</span><b>Découvrir les projets</b><span>Voir ce que le cercle construit, selon ce qui t’intéresse.</span></button>' +
+        '<button type="button" class="fy-opt" data-act="fymode" data-v="proposer"><span class="num">02</span><b>Proposer ce que je fais</b><span>Trouver les projets qui ont besoin de ton métier.</span></button>' +
+        '<a class="fy-opt fy-opt--main" href="deposer.html"><span class="num">03</span><b>J’ai un projet</b><span>Le déposer et voir les sides qu’il touche.</span></a></div>';
+      return;
+    }
+    var top = fyRank(), best = top.filter(function (x) { return x.score > 0; });
+    var form = FY.mode === 'proposer'
+      ? '<div class="fy-form"><div class="field"><label for="fy-job">Ton métier</label><input type="text" id="fy-job" list="fy-jobs" value="' + esc(FY.job || '') + '" placeholder="Ex. Comptable, Photographe, Juriste…" data-ch="fyjob"><datalist id="fy-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist></div>' +
+        '<div class="field"><label for="fy-type">Tu interviens comme</label><select id="fy-type" data-ch="fytype">' + DB.pros.map(function (x) { return '<option' + (FY.type === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div></div>'
+      : '<div class="fy-form"><div><p class="lbl">Ce qui t’intéresse</p><div class="chips">' + projectCats().map(function (c) { return '<button type="button" class="chip" data-act="fycat" data-v="' + esc(c) + '" aria-pressed="' + (FY.cats.indexOf(c) > -1) + '">' + esc(c) + '</button>'; }).join('') + '</div></div>' +
+        '<div><p class="lbl">Où en sont les projets</p><div class="chips">' + PHASES.map(function (ph) { return '<button type="button" class="chip" data-act="fyphase" data-v="' + ph + '" aria-pressed="' + (FY.phases.indexOf(ph) > -1) + '">' + ph + '</button>'; }).join('') + '</div></div></div>';
+    var title = FY.mode === 'proposer' ? 'Les projets qui ont besoin de toi' : 'Les meilleurs projets pour toi';
+    var list = FY.mode === 'proposer' && FY.job && !best.length
+      ? '<div class="fy-empty"><p class="body">Aucun projet publié ne cherche « ' + esc(FY.job) + ' » pour l’instant.</p><div class="row"><a class="btn btn--solid btn--sm" href="rejoindre.html">Me faire connaître</a><a class="btn btn--line btn--sm" href="metiers.html">Voir les métiers recherchés</a></div></div>'
+      : (FY.mode === 'proposer' && !FY.job ? '<p class="body">Indique ton métier : on te montre les projets qui le recherchent.</p>' : '<div class="pgrid">' + (best.length ? best : top).slice(0, 3).map(fyCard).join('') + '</div>');
+    box.innerHTML = '<div class="head head--split"><div class="head"><p class="eyebrow">Pour toi · ' + (FY.mode === 'proposer' ? 'tu proposes ton savoir-faire' : 'tu découvres les projets') + '</p><h2 class="h2">' + title + '</h2></div><button type="button" class="link" data-act="fymode" data-v="">Changer de profil <span>↺</span></button></div>' + form + list;
+  }
+  ACT.fymode = function (b) { FY.mode = b.dataset.v; fySave(); renderFY(); var f = $('#fy-job'); if (f && FY.mode === 'proposer' && !FY.job) f.focus(); };
+  ACT.fycat = function (b) { var i = FY.cats.indexOf(b.dataset.v); if (i > -1) FY.cats.splice(i, 1); else FY.cats.push(b.dataset.v); fySave(); renderFY(); };
+  ACT.fyphase = function (b) { var i = FY.phases.indexOf(b.dataset.v); if (i > -1) FY.phases.splice(i, 1); else FY.phases.push(b.dataset.v); fySave(); renderFY(); };
+  CH.fyjob = function (el) { FY.job = el.value.trim(); fySave(); renderFY(); };
+  CH.fytype = function (el) { FY.type = el.value; fySave(); };
   ACT.phase = function (b) { F.phase = b.dataset.v; $$('[data-act=phase]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderProjets(); };
   IN.pq = function (el) { F.q = el.value; renderProjets(); };
 

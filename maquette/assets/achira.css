@@ -639,6 +639,27 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 @media (prefers-reduced-motion: reduce) { .glow-cta::before { background: linear-gradient(rgba(255,240,214,.6), rgba(255,240,214,.6)); } }
 
+/* ---------- Projets : « Pour toi » ---------- */
+.fy-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.fy-opt { display: grid; gap: 8px; align-content: start; text-align: left; padding: clamp(20px, 2.4vw, 30px); border-radius: 18px; border: 1px solid var(--paper-line); background: #f6efe1; color: var(--ink); transition: transform .35s var(--ease), border-color .3s, box-shadow .3s, background .3s; }
+.fy-opt:hover { transform: translateY(-3px); border-color: rgba(16,35,29,.35); box-shadow: 0 14px 30px rgba(16,35,29,.12); background: #fffaf0; }
+.fy-opt b { font: 400 clamp(26px, 2.6vw, 36px)/1 var(--brand); letter-spacing: .04em; }
+.fy-opt span:not(.num) { color: var(--ink2); font-size: 15px; }
+.fy-opt--main { background: var(--achira); border-color: var(--achira); color: var(--ivory); }
+.fy-opt--main span:not(.num), .fy-opt--main .num { color: rgba(238,229,211,.85) !important; }
+.fy-opt--main:hover { background: var(--achira-hi); }
+.fy-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; padding: 18px; border-radius: 16px; background: #f6efe1; border: 1px solid var(--paper-line); }
+.fy-form .lbl { color: var(--ink2); margin-bottom: 10px; display: block; }
+.bord .field label { color: var(--ink2); }
+.fy-card { display: grid; gap: 10px; align-content: start; }
+.fy-card .pcard__t p, .fy-card .cov__txt { color: var(--ink2); }
+.fy-card .h3 { color: var(--ink); }
+.fy-card .btn { justify-self: start; }
+.fy-why { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; background: rgba(127,11,31,.06); border: 1px solid rgba(127,11,31,.18); }
+.fy-why span { font-size: 13px; color: var(--achira); font-weight: 600; }
+.fy-empty { display: grid; gap: 12px; padding: 18px; border-radius: 16px; border: 1px dashed rgba(16,35,29,.3); }
+@media (max-width: 860px) { .fy-opts { grid-template-columns: 1fr; } }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }
