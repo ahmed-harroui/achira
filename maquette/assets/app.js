@@ -658,6 +658,7 @@
 
   /* ----- « Pour toi » : qui est le visiteur, et les meilleurs projets pour lui ----- */
   var FYK = 'achira-pour-toi';
+  var PROFILS = ['Indépendant', 'Salarié', 'Cabinet', 'Groupe ou collectif', 'Entreprise ou service'];
   var FY = (function () { try { return JSON.parse(localStorage.getItem(FYK)) || {}; } catch (e) { return {}; } })();
   FY.cats = FY.cats || []; FY.phases = FY.phases || [];
   function fySave() { try { localStorage.setItem(FYK, JSON.stringify(FY)); } catch (e) {} }
@@ -669,9 +670,9 @@
         DB.domains.forEach(function (d) {
           var s = p.sides[d.id]; if (!s || s.s === 'na') return;
           var wanted = (s.open || []).some(function (o) { return norm(o) === j; }), mine = d.metiers.some(function (m) { return norm(m) === j; });
-          if (wanted && s.s !== 'ok') { score += 6; why.push('Ton métier est recherché · side ' + pad(d.n)); help.push(d); }
+          if (wanted && s.s !== 'ok') { score += 6; why.push('Ce métier est recherché · side ' + pad(d.n)); help.push(d); }
           else if (mine && (s.s === 'open' || s.s === 'part')) { score += 3; why.push('Le side ' + pad(d.n) + ' ' + d.t + ' a besoin de renfort'); help.push(d); }
-          else if (mine) { score += 1; why.push('Ton métier intervient sur le side ' + pad(d.n)); }
+          else if (mine) { score += 1; why.push('Ce métier intervient sur le side ' + pad(d.n)); }
         });
       } else {
         FY.cats.forEach(function (c) { if (c === 'Spécialités ACHIRA' ? p.achira : p.disc === c) { score += 4; why.push('Catégorie : ' + c); } });
@@ -690,24 +691,24 @@
   function renderFY() {
     var box = $('#fy'); if (!box) return;
     if (!FY.mode) {
-      box.innerHTML = '<div class="head"><p class="eyebrow">Pour toi</p><h2 class="h2">Tu es là pour…</h2><p class="body">Une réponse, et on te montre les projets qui te correspondent.</p></div>' +
+      box.innerHTML = '<div class="head"><p class="eyebrow">Pour toi</p><h2 class="h2">On est là pour…</h2><p class="body">Une personne, un groupe, un cabinet ou un service : une réponse, et on vous montre les projets qui vous correspondent.</p></div>' +
         '<div class="fy-opts">' +
-        '<button type="button" class="fy-opt" data-act="fymode" data-v="decouvrir"><span class="num">01</span><b>Découvrir les projets</b><span>Voir ce que le cercle construit, selon ce qui t’intéresse.</span></button>' +
-        '<button type="button" class="fy-opt" data-act="fymode" data-v="proposer"><span class="num">02</span><b>Proposer ce que je fais</b><span>Trouver les projets qui ont besoin de ton métier.</span></button>' +
-        '<a class="fy-opt fy-opt--main" href="deposer.html"><span class="num">03</span><b>J’ai un projet</b><span>Le déposer et voir les sides qu’il touche.</span></a></div>';
+        '<button type="button" class="fy-opt" data-act="fymode" data-v="decouvrir"><span class="num">01</span><b>Découvrir les projets</b><span>Voir ce que le cercle construit, selon ce qui nous intéresse.</span></button>' +
+        '<button type="button" class="fy-opt" data-act="fymode" data-v="proposer"><span class="num">02</span><b>Proposer ce qu’on fait</b><span>Notre métier ou notre service : trouver les projets qui en ont besoin.</span></button>' +
+        '<a class="fy-opt fy-opt--main" href="deposer.html"><span class="num">03</span><b>On a un projet</b><span>Le déposer et voir les sides qu’il touche.</span></a></div>';
       return;
     }
     var top = fyRank(), best = top.filter(function (x) { return x.score > 0; });
     var form = FY.mode === 'proposer'
-      ? '<div class="fy-form"><div class="field"><label for="fy-job">Ton métier</label><input type="text" id="fy-job" list="fy-jobs" value="' + esc(FY.job || '') + '" placeholder="Ex. Comptable, Photographe, Juriste…" data-ch="fyjob"><datalist id="fy-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist></div>' +
-        '<div class="field"><label for="fy-type">Tu interviens comme</label><select id="fy-type" data-ch="fytype">' + DB.pros.map(function (x) { return '<option' + (FY.type === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div></div>'
-      : '<div class="fy-form"><div><p class="lbl">Ce qui t’intéresse</p><div class="chips">' + projectCats().map(function (c) { return '<button type="button" class="chip" data-act="fycat" data-v="' + esc(c) + '" aria-pressed="' + (FY.cats.indexOf(c) > -1) + '">' + esc(c) + '</button>'; }).join('') + '</div></div>' +
+      ? '<div class="fy-form"><div class="field"><label for="fy-job">Notre métier ou notre service</label><input type="text" id="fy-job" list="fy-jobs" value="' + esc(FY.job || '') + '" placeholder="Ex. Comptable, Photographe, Juriste, Agence de communication…" data-ch="fyjob"><datalist id="fy-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist></div>' +
+        '<div class="field"><label for="fy-type">On intervient comme</label><select id="fy-type" data-ch="fytype">' + PROFILS.map(function (x) { return '<option' + (FY.type === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div></div>'
+      : '<div class="fy-form"><div><p class="lbl">Ce qui nous intéresse</p><div class="chips">' + projectCats().map(function (c) { return '<button type="button" class="chip" data-act="fycat" data-v="' + esc(c) + '" aria-pressed="' + (FY.cats.indexOf(c) > -1) + '">' + esc(c) + '</button>'; }).join('') + '</div></div>' +
         '<div><p class="lbl">Où en sont les projets</p><div class="chips">' + PHASES.map(function (ph) { return '<button type="button" class="chip" data-act="fyphase" data-v="' + ph + '" aria-pressed="' + (FY.phases.indexOf(ph) > -1) + '">' + ph + '</button>'; }).join('') + '</div></div></div>';
-    var title = FY.mode === 'proposer' ? 'Les projets qui ont besoin de toi' : 'Les meilleurs projets pour toi';
+    var title = FY.mode === 'proposer' ? 'Les projets qui ont besoin de vous' : 'Les meilleurs projets pour vous';
     var list = FY.mode === 'proposer' && FY.job && !best.length
-      ? '<div class="fy-empty"><p class="body">Aucun projet publié ne cherche « ' + esc(FY.job) + ' » pour l’instant.</p><div class="row"><a class="btn btn--solid btn--sm" href="rejoindre.html">Me faire connaître</a><a class="btn btn--line btn--sm" href="metiers.html">Voir les métiers recherchés</a></div></div>'
-      : (FY.mode === 'proposer' && !FY.job ? '<p class="body">Indique ton métier : on te montre les projets qui le recherchent.</p>' : '<div class="pgrid">' + (best.length ? best : top).slice(0, 3).map(fyCard).join('') + '</div>');
-    box.innerHTML = '<div class="head head--split"><div class="head"><p class="eyebrow">Pour toi · ' + (FY.mode === 'proposer' ? 'tu proposes ton savoir-faire' : 'tu découvres les projets') + '</p><h2 class="h2">' + title + '</h2></div><button type="button" class="link" data-act="fymode" data-v="">Changer de profil <span>↺</span></button></div>' + form + list;
+      ? '<div class="fy-empty"><p class="body">Aucun projet publié ne cherche « ' + esc(FY.job) + ' » pour l’instant.</p><div class="row"><a class="btn btn--solid btn--sm" href="rejoindre.html">Nous faire connaître</a><a class="btn btn--line btn--sm" href="metiers.html">Voir les métiers recherchés</a></div></div>'
+      : (FY.mode === 'proposer' && !FY.job ? '<p class="body">Indiquez votre métier ou votre service : on vous montre les projets qui le recherchent.</p>' : '<div class="pgrid">' + (best.length ? best : top).slice(0, 3).map(fyCard).join('') + '</div>');
+    box.innerHTML = '<div class="head head--split"><div class="head"><p class="eyebrow">Pour toi · ' + (FY.mode === 'proposer' ? 'on propose notre savoir-faire' : 'on découvre les projets') + '</p><h2 class="h2">' + title + '</h2></div><button type="button" class="link" data-act="fymode" data-v="">Changer de profil <span>↺</span></button></div>' + form + list;
   }
   ACT.fymode = function (b) { FY.mode = b.dataset.v; fySave(); renderFY(); var f = $('#fy-job'); if (f && FY.mode === 'proposer' && !FY.job) f.focus(); };
   ACT.fycat = function (b) { var i = FY.cats.indexOf(b.dataset.v); if (i > -1) FY.cats.splice(i, 1); else FY.cats.push(b.dataset.v); fySave(); renderFY(); };
@@ -999,10 +1000,10 @@
     shell('<section class="phero"><div class="in"><p class="eyebrow rv">Rejoindre</p><h1 class="h1 rv">Propose ton savoir-faire.</h1><p class="lead rv" style="max-width:38ch">Sur un side précis d’un projet, ou simplement pour te faire connaître du cercle.</p></div></section>' +
       '<section class="band dark"><div class="in"><div class="split" style="align-items:start"><div>' +
       '<form class="form" id="join" novalidate>' +
-      '<div class="field"><label for="j-name">Nom ou nom du cabinet</label><input type="text" id="j-name" required autocomplete="name"></div>' +
+      '<div class="field"><label for="j-name">Nom (personne, groupe, cabinet ou entreprise)</label><input type="text" id="j-name" required autocomplete="name"></div>' +
       '<div class="field"><label for="j-email">E-mail</label><input type="email" id="j-email" required autocomplete="email"></div>' +
-      '<div class="field"><label for="j-metier">Ton métier</label><input type="text" id="j-metier" list="metiers" value="' + esc(metier) + '" required><datalist id="metiers">' + allMetiers.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist></div>' +
-      '<div class="field"><label for="j-type">Tu interviens comme</label><select id="j-type">' + DB.pros.map(function (p) { return '<option>' + p + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label for="j-metier">Métier ou service</label><input type="text" id="j-metier" list="metiers" value="' + esc(metier) + '" required><datalist id="metiers">' + allMetiers.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist></div>' +
+      '<div class="field"><label for="j-type">On intervient comme</label><select id="j-type">' + PROFILS.map(function (p) { return '<option>' + p + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label for="j-proj">Projet</label><select id="j-proj"><option value="">Pas de projet en particulier</option>' + pubProjects().map(function (p) { return '<option value="' + p.slug + '"' + (pp === p ? ' selected' : '') + '>' + esc(p.title) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label for="j-dom">Side</label><select id="j-dom"><option value="">Pas de side en particulier</option>' + DB.domains.map(function (d) { return '<option value="' + d.id + '"' + (dd === d ? ' selected' : '') + '>' + pad(d.n) + ' · ' + esc(d.t) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field full"><label for="j-link">Portfolio ou site</label><input type="url" id="j-link" placeholder="https://"></div>' +
