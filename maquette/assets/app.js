@@ -323,6 +323,76 @@
     return '<div class="mm-tools"><p class="small">Clique sur un nœud pour le déplier.</p><div class="row"><button class="btn btn--line btn--sm" data-act="mm-all" data-v="1">Tout déplier</button><button class="btn btn--line btn--sm" data-act="mm-all" data-v="0">Replier</button></div></div>' +
       '<div class="mm-wrap"><ul class="mm root">' + mmLi(root, 0, 1) + '</ul></div>';
   }
+  /* ---------- Explorateur de l'arbre (colonnes : sides → side → métier) ---------- */
+  var EX = { ds: [], p: null, d: null, job: null, q: '', view: 'ex', depth: 1 };
+  function hl(s) {
+    var t = esc(s); if (!EX.q) return t;
+    var w = norm(EX.q), n = norm(s), i = n.indexOf(w);
+    return i < 0 ? t : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + EX.q.length)) + '</mark>' + esc(s.slice(i + EX.q.length));
+  }
+  function exHits(d) {
+    if (!EX.q) return 0; var w = norm(EX.q);
+    return [d.t].concat(d.tasks, d.comp, d.metiers).filter(function (x) { return norm(x).indexOf(w) > -1; }).length;
+  }
+  function explorer(domains, p) {
+    EX.ds = domains; EX.p = p || null; EX.q = ''; EX.job = null; EX.view = 'ex';
+    var h = hash(); EX.d = domains.find(function (d) { return d.id === h; }) || null; EX.depth = EX.d ? 2 : 1;
+    if (!EX.d && window.matchMedia && window.matchMedia('(min-width: 861px)').matches) { EX.d = domains[0]; }
+    return '<div class="ex"><div class="ex__bar"><label class="ex__search">' + SEARCH_ICON + '<input type="search" data-in="exq" placeholder="Filtrer l’arbre : mission, compétence, métier…" aria-label="Filtrer l’arbre"></label>' +
+      '<div class="seg" role="group" aria-label="Affichage"><button type="button" data-act="exview" data-v="ex" aria-pressed="true">Explorateur</button><button type="button" data-act="exview" data-v="map" aria-pressed="false">Carte</button></div></div>' +
+      '<div id="excols">' + exCols() + '</div></div>';
+  }
+  function exCols() {
+    if (EX.view === 'map') return mindmap(EX.p ? EX.p.title : 'PROJET', EX.ds, EX.p);
+    var P = EX.p, base = IS_ADMIN ? '../' : ROOT;
+    var col1 = '<div class="ex__col ex__col--1"><p class="ex__h lbl">' + EX.ds.length + ' sides</p>' + DB.poles.map(function (pl) {
+      var ds = pl.d.map(dom).filter(function (d) { return d && EX.ds.indexOf(d) > -1; });
+      if (!ds.length) return '';
+      return '<p class="ex__pole">' + esc(pl.t) + '</p><ul class="ex__list">' + ds.map(function (d) {
+        var hits = exHits(d), dim = EX.q && !hits, s = P ? sideOf(P, d) : null, nm = DB.members.filter(function (m) { return memberDomainsIn(DB, m).indexOf(d.id) > -1; }).length;
+        return '<li><button type="button" class="ex__item' + (EX.d === d ? ' is-on' : '') + (dim ? ' is-dim' : '') + '" data-act="exd" data-d="' + d.id + '">' +
+          '<span class="num">' + pad(d.n) + '</span><span class="ex__t"><b>' + hl(d.t) + '</b><span>' + d.tasks.length + ' missions · ' + d.metiers.length + ' métiers · ' + nm + ' membre' + (nm > 1 ? 's' : '') + '</span></span>' +
+          (s ? '<i class="ex__dot st-' + s.s + '" title="' + ST[s.s] + '"></i>' : '') + (hits ? '<span class="ex__hits tab">' + hits + '</span>' : '') + '<span class="ex__go" aria-hidden="true">›</span></button></li>';
+      }).join('') + '</ul>';
+    }).join('') + '</div>';
+    var col2 = '', col3 = '';
+    if (EX.d) {
+      var d = EX.d, s = P ? sideOf(P, d) : null, lead = s && s.lead && mem(s.lead);
+      col2 = '<div class="ex__col ex__col--2"><button type="button" class="ex__back" data-act="exback" data-v="1">‹ Sides</button>' +
+        '<p class="eyebrow">Side ' + pad(d.n) + ' · ' + esc((poleOf(d) || {}).t || '') + '</p><h3 class="h3">' + hl(d.t) + '</h3>' +
+        (s ? '<div class="row" style="gap:10px">' + st(s.s) + (lead ? '<span class="side__who">' + avatar(lead) + esc(lead.name) + '</span>' : '') + '</div>' : '') +
+        '<p class="lbl">Métiers <span class="tab">' + d.metiers.length + '</span></p><ul class="ex__list">' + d.metiers.map(function (j) {
+          var n = jobMembers(j).length, open = s && s.s !== 'na' && s.open && s.open.indexOf(j) > -1;
+          return '<li><button type="button" class="ex__item ex__item--job' + (EX.job === j ? ' is-on' : '') + '" data-act="exj" data-v="' + esc(j) + '"><span class="ex__t"><b>' + hl(j) + '</b><span>' + (n ? n + ' membre' + (n > 1 ? 's' : '') : 'Aucun membre') + (open ? ' · <em class="ex__open">recherché</em>' : '') + '</span></span><span class="ex__go" aria-hidden="true">›</span></button></li>';
+        }).join('') + '</ul>' +
+        '<p class="lbl">Missions <span class="tab">' + d.tasks.length + '</span></p><ul class="ticks">' + d.tasks.map(function (t) { return '<li>' + hl(t) + '</li>'; }).join('') + '</ul>' +
+        '<p class="lbl">Compétences requises</p><div class="chips">' + d.comp.map(function (c) { return '<span class="chip">' + hl(c) + '</span>'; }).join('') + '</div></div>';
+    }
+    if (EX.d && EX.job) {
+      var j = EX.job, ms = jobMembers(j), others = DB.domains.filter(function (x) { return x.metiers.indexOf(j) > -1; }), s2 = P ? sideOf(P, EX.d) : null;
+      var open2 = s2 && s2.s !== 'na' && s2.open && s2.open.indexOf(j) > -1;
+      col3 = '<div class="ex__col ex__col--3"><button type="button" class="ex__back" data-act="exback" data-v="2">‹ ' + esc(EX.d.t) + '</button>' +
+        '<p class="eyebrow">Métier</p><h3 class="h3">' + esc(j) + '</h3>' + (open2 ? '<p><span class="chip chip--open">Recherché sur ce projet</span></p>' : '') +
+        '<p class="lbl">Modes d’exercice</p><div class="chips">' + DB.pros.map(function (x) { return '<span class="chip">' + x + '</span>'; }).join('') + '</div>' +
+        '<p class="lbl">Intervient sur</p><div class="chips">' + others.map(function (x) { return '<button type="button" class="chip' + (x === EX.d ? ' chip--on' : '') + '" data-act="exd" data-d="' + x.id + '" data-keep="1">' + pad(x.n) + ' ' + esc(x.t) + '</button>'; }).join('') + '</div>' +
+        '<p class="lbl">Membres du cercle</p>' + (ms.length ? '<ul class="wr-people">' + ms.map(function (m) { return '<li>' + avatar(m) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.type) + (m.city ? ' · ' + esc(m.city) : '') + '</span></div></li>'; }).join('') + '</ul>' : '<p class="small">Personne dans le cercle pour l’instant.</p>') +
+        '<div class="row">' + (IS_ADMIN ? '<a class="btn btn--line btn--sm" href="membres.html">Gérer les membres</a>' : '<a class="btn btn--bord btn--sm" href="' + base + 'rejoindre.html#' + (P ? P.slug + '.' : '.') + EX.d.id + '.' + slug(j) + '">Proposer mon aide</a><a class="btn btn--line btn--sm" href="' + base + 'membres.html#job-' + slug(j) + '">Voir les membres</a>') + '</div></div>';
+    }
+    if (!col2) col2 = '<div class="ex__col ex__col--2 ex__empty"><p class="small">Choisis un side pour voir ses métiers, ses missions et ses compétences.</p></div>';
+    if (!col3 && EX.d) col3 = '<div class="ex__col ex__col--3 ex__empty"><p class="small">Choisis un métier pour voir qui l’exerce dans le cercle.</p></div>';
+    return '<div class="ex__cols" data-depth="' + EX.depth + '">' + col1 + col2 + col3 + '</div>';
+  }
+  function renderEx() { var c = $('#excols'); if (c) c.innerHTML = exCols(); }
+  ACT.exd = function (b) { EX.d = dom(b.dataset.d); if (!b.dataset.keep || (EX.job && EX.d.metiers.indexOf(EX.job) < 0)) EX.job = null; EX.depth = EX.job ? 3 : 2; renderEx(); };
+  ACT.exj = function (b) { EX.job = b.dataset.v; EX.depth = 3; renderEx(); };
+  ACT.exback = function (b) { EX.depth = +b.dataset.v; if (EX.depth < 3) EX.job = null; if (EX.depth < 2 && !(window.matchMedia && window.matchMedia('(min-width: 861px)').matches)) EX.d = null; renderEx(); };
+  ACT.exview = function (b) { EX.view = b.dataset.v; $$('[data-act=exview]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); var s = $('.ex__search'); if (s) s.hidden = EX.view === 'map'; renderEx(); };
+  IN.exq = function (el) {
+    EX.q = el.value.trim();
+    if (EX.q) { var best = EX.ds.map(function (d) { return [d, exHits(d)]; }).sort(function (a, b) { return b[1] - a[1]; })[0]; if (best && best[1] && (!EX.d || !exHits(EX.d))) { EX.d = best[0]; EX.job = null; } }
+    renderEx();
+  };
+
   ACT.mm = function (b) { var li = b.parentNode; var o = li.classList.toggle('open'); b.setAttribute('aria-expanded', o); };
   ACT['mm-all'] = function (b) {
     var wrap = b.closest('.mm-tools').nextElementSibling, on = b.dataset.v === '1';
@@ -469,7 +539,7 @@
         }).join('') + '</div></div>';
       }).join('') + '</div></div></section>' +
 
-      '<section class="band dark"><div class="in"><div class="head"><p class="eyebrow">Le schéma</p><h2 class="h2">La carte complète.</h2><p class="body">Du projet aux sides, des sides aux missions, puis aux compétences, aux métiers et aux profils.</p></div>' + mindmap('PROJET', DB.domains, null) + '</div></section>' +
+      '<section class="band dark"><div class="in"><div class="head"><p class="eyebrow">L’arbre des métiers</p><h2 class="h2">Explorer l’arbre.</h2><p class="body">Choisis un side, puis un métier : tu vois ses missions, ses compétences et les membres du cercle qui l’exercent.</p></div>' + explorer(DB.domains, null) + '</div></section>' +
 
       '<section class="band petrol"><div class="in"><div class="head"><p class="eyebrow">Le parcours</p><h2 class="h2">Prendre un side.</h2></div><ol class="path">' +
       '<li><span class="big">01</span><h3 class="h3">Suivre</h3><p>Tu suis les projets, leurs sides et leurs coulisses à ton rythme.</p></li>' +
@@ -524,8 +594,8 @@
         }).join('') + '</div></div>';
       }).join('') + '</div></div></section>' +
 
-      '<section class="band dark"><div class="in"><div class="head"><p class="eyebrow">La carte du projet</p><h2 class="h2">Tout le projet, d’un regard.</h2><p class="body">Du projet aux sides, des sides aux missions, puis aux compétences, aux métiers et aux profils.</p></div>' +
-      mindmap(p.title, DB.domains.filter(function (d) { return showNA || sideOf(p, d).s !== 'na'; }), p) + '</div></section>' +
+      '<section class="band dark"><div class="in"><div class="head"><p class="eyebrow">L’arbre du projet</p><h2 class="h2">Tout le projet, side par side.</h2><p class="body">Chaque side avec son état, ses métiers (ceux qui sont recherchés sont signalés) et les membres du cercle qui peuvent aider.</p></div>' +
+      explorer(DB.domains.filter(function (d) { return showNA || sideOf(p, d).s !== 'na'; }), p) + '</div></section>' +
 
       (roles.length ? '<section class="band petrol"><div class="in"><div class="head"><p class="eyebrow">Sur ce projet</p><h2 class="h2">Le projet cherche.</h2></div><ul class="roles">' + roles.map(roleRow).join('') + '</ul></div></section>' : '') +
 
@@ -997,7 +1067,7 @@
       '<div class="addrow"><input type="text" id="m-add" placeholder="Nouvelle mission" aria-label="Nouvelle mission"><button class="btn btn--line btn--sm" data-act="addt">Ajouter</button></div></div>' +
       ['comp', 'metiers'].map(function (k) { return '<div class="field"><span class="lbl">' + (k === 'comp' ? 'Compétences requises' : 'Métiers') + '</span><div class="chips">' + cur[k].map(function (x, i) { return '<span class="chip">' + esc(x) + ' <button type="button" data-act="rmc" data-k="' + k + '" data-i="' + i + '" aria-label="Retirer ' + esc(x) + '" style="font-size:14px;line-height:1">×</button></span>'; }).join('') + '</div><div class="addrow"><input type="text" id="m-' + k + '" placeholder="' + (k === 'comp' ? 'Nouvelle compétence' : 'Nouveau métier') + '" aria-label="Ajouter"><button class="btn btn--line btn--sm" data-act="addc" data-k="' + k + '">Ajouter</button></div></div>'; }).join('') +
       '<p class="small">Profils acceptés pour chaque métier : ' + DB.pros.join(' · ') + '</p></section></div>' +
-      '<section class="panel"><h2 class="h3">Le schéma complet</h2>' + mindmap('PROJET', DB.domains, null) + '</section>');
+      '<section class="panel"><h2 class="h3">L’arbre complet</h2>' + explorer(DB.domains, null) + '</section>');
   }
   function curD() { return dom(hash()) || DB.domains[0]; }
   ACT.pickd = function (a, e) { e.preventDefault(); history.replaceState(null, '', '#' + a.dataset.d); aModele(); };
