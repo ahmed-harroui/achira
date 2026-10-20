@@ -225,15 +225,15 @@
   }
   function loginView(msg) {
     APP.innerHTML = '<div class="login"><form class="login__box" id="login" novalidate><div class="adm-logo" style="padding:0">' + LOGO + '<span><b>ACHIRA</b><small>Dashboard</small></span></div>' +
-      '<h1 class="h3">Connexion</h1><p class="small">Réservée aux administrateurs du cercle.</p>' +
-      '<div class="field"><label for="l-email">E-mail</label><input type="email" id="l-email" autocomplete="username" required></div>' +
-      '<div class="field"><label for="l-pass">Mot de passe</label><input type="password" id="l-pass" autocomplete="current-password" required></div>' +
+      '<h1 class="h3">Connexion</h1><p class="small">Entre le mot de passe de l’équipe ACHIRA.</p>' +
+      '<input type="text" id="l-email" autocomplete="username" value="' + esc(CFG.teamEmail || '') + '" hidden>' +
+      '<div class="field"><label for="l-pass">Mot de passe</label><input type="password" id="l-pass" autocomplete="current-password" required autofocus></div>' +
       '<p class="small" id="l-err" role="alert" style="color:#f3a3b1">' + esc(msg || '') + '</p><button class="btn btn--bord" type="submit">Se connecter</button><a class="link" href="../index.html">Retour au site <span>→</span></a></form></div>';
     $('#login').addEventListener('submit', async function (e) {
       e.preventDefault();
       var b = this.querySelector('button'); b.disabled = true; b.textContent = 'Connexion…';
       var r = await SB.auth.signInWithPassword({ email: $('#l-email').value.trim(), password: $('#l-pass').value });
-      if (r.error) { b.disabled = false; b.textContent = 'Se connecter'; $('#l-err').textContent = 'E-mail ou mot de passe incorrect.'; return; }
+      if (r.error) { b.disabled = false; b.textContent = 'Se connecter'; $('#l-err').textContent = 'Mot de passe incorrect.'; $('#l-pass').select(); return; }
       boot();
     });
   }
@@ -757,7 +757,7 @@
         var b = a[2] === 'admin-candidatures' && newSubs() ? '<span class="badge">' + newSubs() + '</span>' : '';
         return '<a href="' + a[0] + '"' + (cur === a[2] ? ' aria-current="page"' : '') + '><span>' + a[1] + '</span>' + b + '</a>';
       }).join('') + '<a href="../index.html"><span>Voir le site ↗</span></a></nav>' +
-      '<div class="adm-foot"><div class="adm-user"><span class="av">' + esc((ADMIN_EMAIL || 'A')[0].toUpperCase()) + '</span><div>' + esc(ADMIN_EMAIL || 'Ahmed') + '<span>Admin</span></div></div>' +
+      '<div class="adm-foot"><div class="adm-user"><span class="av">A</span><div>' + esc(ADMIN_EMAIL && ADMIN_EMAIL !== (CFG && CFG.teamEmail) ? ADMIN_EMAIL : 'Équipe ACHIRA') + '<span>Admin</span></div></div>' +
       (ONLINE ? '<p class="small" style="font-size:11px;color:var(--s-ok)">Connecté à la base · enregistrement automatique</p><button class="btn btn--line btn--sm" data-act="logout">Se déconnecter</button>' : '<p class="small" style="font-size:11px;color:var(--champ)">Maquette · modifications gardées dans ce navigateur</p>') + '</div></aside>' +
       '<main class="adm-main" id="view"><div class="adm-top"><div><p class="eyebrow">' + eb + '</p><h1 class="h1">' + title + '</h1></div><div class="row">' + (actions || '') + '</div></div>' + body + '</main></div>';
   }
@@ -1148,7 +1148,7 @@
       '<section class="panel"><h2 class="h3">Profils professionnels</h2><p class="small">Proposés pour chaque métier, dans les candidatures et sur le site.</p><div class="chips">' + DB.pros.map(function (p) { return '<span class="chip">' + p + '</span>'; }).join('') + '</div>' +
       '<h2 class="h3" style="margin-top:8px">Utilisateurs</h2><ul class="list"><li><span class="grow"><b>Ahmed</b><br><span class="small">Admin</span></span></li><li><span class="grow"><b>Éditeur</b><br><span class="small">Peut modifier les projets et les textes</span></span><span class="st st--draft">Invitation à envoyer</span></li></ul></section></div>' +
       (ONLINE
-        ? '<div class="g2 g2--even"><section class="panel"><h2 class="h3">Mon mot de passe</h2><div class="field"><label for="r-pw">Nouveau mot de passe (10 caractères minimum)</label><input type="password" id="r-pw" autocomplete="new-password"></div><p class="small" id="r-pw-msg" role="status"></p><div><button class="btn btn--bord" data-act="setpw">Changer mon mot de passe</button></div></section>' +
+        ? '<div class="g2 g2--even"><section class="panel"><h2 class="h3">Mot de passe de l’équipe</h2><p class="small">C’est le mot de passe partagé qui ouvre la dashboard. Le changer ne déconnecte personne, mais il faudra donner le nouveau à toute l’équipe.</p><div class="field"><label for="r-pw">Nouveau mot de passe (10 caractères minimum)</label><input type="password" id="r-pw" autocomplete="new-password"></div><p class="small" id="r-pw-msg" role="status"></p><div><button class="btn btn--bord" data-act="setpw">Changer mon mot de passe</button></div></section>' +
           '<section class="panel"><h2 class="h3">Données</h2><p class="body">Tout est enregistré dans la base Supabase du projet Achira, automatiquement, à chaque modification.</p><div><button class="btn btn--line" data-act="reload">Recharger depuis la base</button></div></section></div>'
         : '<section class="panel"><h2 class="h3">Données de la maquette</h2><p class="body">Tes modifications sont gardées dans ce navigateur. Tu peux revenir aux données d’exemple à tout moment.</p><div><button class="btn btn--line" data-act="reset">Revenir aux données d’exemple</button></div></section>'));
   }
