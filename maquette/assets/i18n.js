@@ -226,6 +226,7 @@ window.ACHIRA_I18N = {
   'sides': ['sides', 'جوانب'],
   'side {n}': ['side {n}', 'الجانب {n}'],
   'sides {n}': ['sides {n}', 'الجوانب {n}'],
+  'Sides {n}': ['Sides {n}', 'الجوانب {n}'],
 
   /* ---------- Métiers ---------- */
   'Chaque side ouvert d’un projet attend un savoir-faire. Salarié, indépendant ou cabinet, propose ton aide.': ['Every open side of a project awaits a skill. Employee, freelancer or firm, offer your help.', 'كل جانب مفتوح في مشروع ينتظر خبرة. أجيراً كنت أو مستقلاً أو مكتباً، اقترح مساعدتك.'],
