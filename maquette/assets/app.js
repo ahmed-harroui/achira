@@ -1781,22 +1781,17 @@
     if (scope === 'ov') return s.ov[i].parts;
     return s[scope];   // after (ouverture), title (portraits)
   }
+  // La mise en scène de l'accueil AKARBI se règle maintenant dans le dashboard AKARBI (akarbi.fr/admin/accueil),
+  // qui reprend les réglages faits ici. Cette page ne fait plus qu'y renvoyer.
+  var AK_DASH = 'https://akarbi.fr/admin/accueil';
   function aAkarbi() {
-    var c = AK(), s = akS(), meta = AK_SECS.filter(function (x) { return x[0] === AKS.sec; })[0];
-    var hasOv = Array.isArray(s.ov);
     RERENDER = aAkarbi;
-    admin('Site AKARBI', 'Accueil AKARBI', '<a class="btn btn--line" href="' + AK_SITE + '" target="_blank" rel="noopener">Voir l’accueil AKARBI ↗</a>',
-      '<p class="small">Chaque modification est enregistrée tout de suite et visible au prochain chargement de l’accueil AKARBI. Les moments sont en secondes de vidéo : un texte apparaît au début choisi et disparaît à la fin. Sur téléphone, les textes placés à gauche ou à droite passent en bas de l’écran.</p>' +
-      '<div class="seg akseg" role="group" aria-label="Partie de l’accueil">' + AK_SECS.map(function (x) { return '<button type="button" data-act="aksec" data-v="' + x[0] + '" aria-pressed="' + (AKS.sec === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
-      '<div class="akgrid"><div class="akleft">' +
-      '<section class="panel akstage-wrap"><div class="panel__h"><div><h2 class="h3">' + esc(meta[1]) + '</h2><p class="small">' + esc(meta[2]) + '</p></div><span class="tab akclock" id="akclock">' + akFmt(AKS.t) + '</span></div>' +
-      '<div class="akstage" id="akstage"><video id="akvid" src="' + esc(akVideoUrl(s)) + '"' + (s.poster ? ' poster="' + esc(s.poster) + '"' : '') + ' muted playsinline preload="auto"></video><div class="akshade"></div><div class="aklayer" id="aklayer"></div></div>' +
-      '<div class="aktime"><input type="range" id="akrange" min="0" max="' + akMax(s) + '" step="0.01" value="' + Math.min(AKS.t, akMax(s)) + '" data-in="akseek" aria-label="Moment de la vidéo"><button type="button" class="btn btn--line btn--sm" data-act="akplay" id="akplaybtn">Lire</button></div>' +
-      (hasOv ? '<div class="aktl" id="aktl" aria-label="Textes sur la durée"></div>' : '') +
-      '<p class="small">Glisse le curseur pour voir la vidéo et les textes à ce moment' + (AKS.sec === 'coffre' ? ' ; après la vidéo vient la lettre, puis la page se déchire sur TRUST YOUR WAY' : '') + '.</p></section>' +
-      akVideoPanel(s) + '</div>' +
-      '<div class="akright" id="akright">' + akRight(s) + '</div></div>');
-    akBind();
+    admin('Site AKARBI', 'Accueil AKARBI', '<a class="btn btn--bord" href="' + AK_DASH + '" target="_blank" rel="noopener">Ouvrir le dashboard AKARBI ↗</a>',
+      '<section class="panel"><h2 class="h3">Cette page a déménagé</h2>' +
+      '<p>Les vidéos, textes, positions et moments de l’accueil AKARBI se règlent maintenant dans le <b>dashboard AKARBI</b>, page « Accueil ». Tous les réglages faits ici y ont été repris.</p>' +
+      '<p class="small">Les modifications faites ici ne seraient plus prises en compte par le site AKARBI.</p>' +
+      '<div class="row"><a class="btn btn--bord" href="' + AK_DASH + '" target="_blank" rel="noopener">Ouvrir le dashboard AKARBI ↗</a>' +
+      '<a class="btn btn--line" href="' + AK_SITE + '" target="_blank" rel="noopener">Voir l’accueil AKARBI ↗</a></div></section>');
   }
   function akVideoPanel(s) {
     return '<section class="panel"><h2 class="h3">Vidéo</h2>' +
