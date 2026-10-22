@@ -1741,7 +1741,7 @@
 
   /* ----- Accueil AKARBI : vidéos, textes, positions et moments d'apparition -----
      La page https://akarbi.fr/akarbi/ lit ces réglages (site_content, clé « akarbi_home ») à chaque visite. Les temps sont en secondes de vidéo. */
-  var AK_SITE = 'https://akarbi.fr/akarbi/';
+  var AK_BASE = 'https://akarbi.fr/akarbi/', AK_SITE = AK_BASE + 'index.html';
   var AK_SECS = [
     ['tannerie', 'Ouverture', 'La tannerie, le scarabée révèle AKARBI'],
     ['veste', 'La veste', 'Détail de la veste Signature'],
@@ -1761,7 +1761,7 @@
     return DB.akarbi;
   }
   function akS() { return AK()[AKS.sec]; }
-  function akVideoUrl(s) { return s.video || AK_SITE + 'vid/' + s.vid + '.webm'; }
+  function akVideoUrl(s) { return s.video || AK_BASE + 'vid/' + s.vid + '.webm'; }
   // jusqu'où on peut placer un texte : la vidéo, et pour le coffre, la lettre qui suit (jusqu'à la déchirure)
   function akMax(s) { return AKS.sec === 'coffre' ? Math.round(s.dur / 0.6 * 0.9 * 100) / 100 : +s.dur; }
   function akFmt(t) { return (Math.round(t * 100) / 100).toFixed(2).replace(/\.?0+$/, '') + ' s'; }
