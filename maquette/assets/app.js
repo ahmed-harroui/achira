@@ -182,7 +182,7 @@
   function snapshot() {
     SNAP = {};
     Object.keys(COLL).forEach(function (c) { var k = COLL[c][1]; SNAP[c] = {}; DB[c].forEach(function (x) { SNAP[c][x[k]] = JSON.stringify(COLL[c][2](x)); }); });
-    SNAP.content = JSON.stringify(DB.content); SNAP.settings = JSON.stringify(DB.settings); SNAP.domains = JSON.stringify(DB.domains);
+    SNAP.akarbi = JSON.stringify(DB.akarbi || null); SNAP.content = JSON.stringify(DB.content); SNAP.settings = JSON.stringify(DB.settings); SNAP.domains = JSON.stringify(DB.domains);
   }
   function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(sync, 400); }
   async function sync() {
@@ -198,6 +198,7 @@
     if (JSON.stringify(DB.content) !== SNAP.content) kv.push({ key: 'content', value: DB.content });
     if (JSON.stringify(DB.settings) !== SNAP.settings) kv.push({ key: 'settings', value: DB.settings });
     if (JSON.stringify(DB.domains) !== SNAP.domains) kv.push({ key: 'domains', value: DB.domains });
+    if (DB.akarbi && JSON.stringify(DB.akarbi) !== SNAP.akarbi) kv.push({ key: 'akarbi_home', value: DB.akarbi });
     if (kv.length) { var r3 = await SB.from('site_content').upsert(kv, { onConflict: 'key' }); if (r3.error) errors.push(r3.error.message); }
     if (errors.length) toast('Erreur d’enregistrement : ' + errors[0]); else snapshot();
   }
@@ -205,6 +206,7 @@
     (rows || []).forEach(function (r) {
       if (r.key === 'content') Object.assign(DB.content, r.value);
       if (r.key === 'settings') Object.assign(DB.settings, r.value);
+      if (r.key === 'akarbi_home' && r.value && typeof r.value === 'object') DB.akarbi = r.value;
       if (r.key === 'domains' && Array.isArray(r.value) && r.value.length) { DB.domains = r.value; DB.poles = treePoles(DB.domains); }
     });
   }
@@ -301,7 +303,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { joinopen: 1, joinclose: 1, jmnext: 1, jmprev: 1, jmpick: 1, jmside: 1, jmcopy: 1, jmsend: 1, jmdiscord: 1, ck: 1, lang: 1, way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { joinopen: 1, joinclose: 1, jmnext: 1, jmprev: 1, jmpick: 1, jmside: 1, jmcopy: 1, jmsend: 1, jmdiscord: 1, ck: 1, lang: 1, way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1, aksec: 1, akplay: 1, akgo: 1, akscale: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -309,7 +311,7 @@
   }
   function flash(el) {
     if (!el) return;
-    var t = el.closest('tr, .srow, .side, .mcard, .list > li, .tlist li, .wr-people li') || el;
+    var t = el.closest('tr, .srow, .side, .mcard, .list > li, .tlist li, .wr-people li, .akcard') || el;
     t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
     setTimeout(function () { t.classList.remove('flash'); }, 1400);
   }
@@ -1329,7 +1331,7 @@
   ACT.msgreload = async function () { if (!ONLINE) return; var x = await SB.from('messages').select('*').order('created_at', { ascending: false }).limit(300); if (!x.error) { DB.messages = x.data; renderMsgs(); renderMsgBtn(); toast('Messages à jour'); } };
   var MAIL_ICON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
 
-  var ADM = [['Pilotage'], ['index.html', 'Tableau de bord', 'admin-dash'], ['demande.html', 'Demande et membres', 'admin-demande'], ['Contenu'], ['projets.html', 'Projets', 'admin-projets'], ['modele.html', 'Modèle des sides', 'admin-modele'], ['contenus.html', 'Textes du site', 'admin-contenus'], ['membres.html', 'Membres', 'admin-membres'], ['Cercle'], ['candidatures.html', 'Candidatures', 'admin-candidatures'], ['reglages.html', 'Réglages', 'admin-reglages']];
+  var ADM = [['Pilotage'], ['index.html', 'Tableau de bord', 'admin-dash'], ['demande.html', 'Demande et membres', 'admin-demande'], ['Contenu'], ['projets.html', 'Projets', 'admin-projets'], ['modele.html', 'Modèle des sides', 'admin-modele'], ['contenus.html', 'Textes du site', 'admin-contenus'], ['membres.html', 'Membres', 'admin-membres'], ['Site AKARBI'], ['akarbi.html', 'Accueil AKARBI', 'admin-akarbi'], ['Cercle'], ['candidatures.html', 'Candidatures', 'admin-candidatures'], ['reglages.html', 'Réglages', 'admin-reglages']];
   function newSubs() { return DB.subs.filter(function (s) { return s.status === 'new'; }).length; }
   function admin(eb, title, actions, body) {
     var cur = PAGE === 'admin-projet' ? 'admin-projets' : PAGE;
@@ -1737,6 +1739,242 @@
   };
   ACT.ref = function (b) { DB.subs.find(function (x) { return x.id === +b.dataset.id; }).status = 'no'; save(); aCandidatures(); toast('Candidature refusée'); };
 
+  /* ----- Accueil AKARBI : vidéos, textes, positions et moments d'apparition -----
+     La page https://akarbi.fr/akarbi/ lit ces réglages (site_content, clé « akarbi_home ») à chaque visite. Les temps sont en secondes de vidéo. */
+  var AK_SITE = 'https://akarbi.fr/akarbi/';
+  var AK_SECS = [
+    ['tannerie', 'Ouverture', 'La tannerie, le scarabée révèle AKARBI'],
+    ['veste', 'La veste', 'Détail de la veste Signature'],
+    ['atelier', 'L’atelier', 'Du geste à la pièce, avec les étapes en bas'],
+    ['pa', 'Portraits → ACHIRA', 'Les deux portraits s’ouvrent sur la vidéo ACHIRA'],
+    ['coffre', 'Coffre et lettre', 'Le coffre, la lettre, puis TRUST YOUR WAY']
+  ];
+  var AK_KINDS = [['lead-xl', 'Grande phrase'], ['lead', 'Phrase'], ['eyebrow', 'Surtitre'], ['h2', 'Titre'], ['h3', 'Sous-titre'], ['body', 'Texte courant'], ['num', 'Numéro d’étape'], ['step-title', 'Titre d’étape'], ['step-txt', 'Texte d’étape'], ['display', 'Très grand titre'], ['motto', 'Devise'], ['link', 'Lien']];
+  var AK_POS = [['tl', 'En haut à gauche'], ['t', 'En haut au centre'], ['tr', 'En haut à droite'], ['l', 'À gauche'], ['c', 'Au centre'], ['r', 'À droite'], ['bl', 'En bas à gauche'], ['b', 'En bas au centre'], ['br', 'En bas à droite']];
+  var AKS = { sec: 'veste', t: 0, sel: -1, note: '' };
+  function akClone(x) { return JSON.parse(JSON.stringify(x)); }
+  // réglages enregistrés, complétés par la mise en scène d'origine pour ce qui n'a jamais été modifié
+  function AK() {
+    var def = window.AKARBI_DEFAUT || {};
+    if (!DB.akarbi || typeof DB.akarbi !== 'object') DB.akarbi = akClone(def);
+    Object.keys(def).forEach(function (k) { DB.akarbi[k] = Object.assign(akClone(def[k]), DB.akarbi[k] || {}); });
+    return DB.akarbi;
+  }
+  function akS() { return AK()[AKS.sec]; }
+  function akVideoUrl(s) { return s.video || AK_SITE + 'vid/' + s.vid + '.webm'; }
+  // jusqu'où on peut placer un texte : la vidéo, et pour le coffre, la lettre qui suit (jusqu'à la déchirure)
+  function akMax(s) { return AKS.sec === 'coffre' ? Math.round(s.dur / 0.6 * 0.9 * 100) / 100 : +s.dur; }
+  function akFmt(t) { return (Math.round(t * 100) / 100).toFixed(2).replace(/\.?0+$/, '') + ' s'; }
+  function akPartsHtml(parts) {
+    return (parts || []).map(function (p) { return '<span class="akp akp--' + esc(p.k) + '">' + esc(p.t) + (p.k === 'link' ? ' →' : '') + '</span>'; }).join('');
+  }
+  function akPartsEditor(parts, scope, i) {
+    return '<div class="akparts">' + (parts || []).map(function (p, k) {
+      return '<div class="akpart"><select data-ch="akkind" data-sc="' + scope + '" data-i="' + i + '" data-k="' + k + '" aria-label="Style de la ligne">' + AK_KINDS.map(function (x) { return '<option value="' + x[0] + '"' + (p.k === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
+        '<input type="text" value="' + esc(p.t) + '" data-in="aktext" data-sc="' + scope + '" data-i="' + i + '" data-k="' + k + '" aria-label="Texte">' +
+        (p.k === 'link' ? '<input type="text" class="akhref" value="' + esc(p.href || '') + '" placeholder="#h-collection ou https://…" data-in="akhref" data-sc="' + scope + '" data-i="' + i + '" data-k="' + k + '" aria-label="Adresse du lien">' : '') +
+        '<button type="button" class="icon" data-act="akrmpart" data-sc="' + scope + '" data-i="' + i + '" data-k="' + k + '" aria-label="Retirer la ligne">×</button></div>';
+    }).join('') + '<button type="button" class="btn btn--line btn--sm" data-act="akaddpart" data-sc="' + scope + '" data-i="' + i + '">+ Ligne</button></div>';
+  }
+  function akPartsOf(scope, i) {
+    var s = akS();
+    if (scope === 'ov') return s.ov[i].parts;
+    return s[scope];   // after (ouverture), title (portraits)
+  }
+  function aAkarbi() {
+    var c = AK(), s = akS(), meta = AK_SECS.filter(function (x) { return x[0] === AKS.sec; })[0];
+    var hasOv = Array.isArray(s.ov);
+    RERENDER = aAkarbi;
+    admin('Site AKARBI', 'Accueil AKARBI', '<a class="btn btn--line" href="' + AK_SITE + '" target="_blank" rel="noopener">Voir l’accueil AKARBI ↗</a>',
+      '<p class="small">Chaque modification est enregistrée tout de suite et visible au prochain chargement de l’accueil AKARBI. Les moments sont en secondes de vidéo : un texte apparaît au début choisi et disparaît à la fin. Sur téléphone, les textes placés à gauche ou à droite passent en bas de l’écran.</p>' +
+      '<div class="seg akseg" role="group" aria-label="Partie de l’accueil">' + AK_SECS.map(function (x) { return '<button type="button" data-act="aksec" data-v="' + x[0] + '" aria-pressed="' + (AKS.sec === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="akgrid"><div class="akleft">' +
+      '<section class="panel akstage-wrap"><div class="panel__h"><div><h2 class="h3">' + esc(meta[1]) + '</h2><p class="small">' + esc(meta[2]) + '</p></div><span class="tab akclock" id="akclock">' + akFmt(AKS.t) + '</span></div>' +
+      '<div class="akstage" id="akstage"><video id="akvid" src="' + esc(akVideoUrl(s)) + '"' + (s.poster ? ' poster="' + esc(s.poster) + '"' : '') + ' muted playsinline preload="auto"></video><div class="akshade"></div><div class="aklayer" id="aklayer"></div></div>' +
+      '<div class="aktime"><input type="range" id="akrange" min="0" max="' + akMax(s) + '" step="0.01" value="' + Math.min(AKS.t, akMax(s)) + '" data-in="akseek" aria-label="Moment de la vidéo"><button type="button" class="btn btn--line btn--sm" data-act="akplay" id="akplaybtn">Lire</button></div>' +
+      (hasOv ? '<div class="aktl" id="aktl" aria-label="Textes sur la durée"></div>' : '') +
+      '<p class="small">Glisse le curseur pour voir la vidéo et les textes à ce moment' + (AKS.sec === 'coffre' ? ' ; après la vidéo vient la lettre, puis la page se déchire sur TRUST YOUR WAY' : '') + '.</p></section>' +
+      akVideoPanel(s) + '</div>' +
+      '<div class="akright" id="akright">' + akRight(s) + '</div></div>');
+    akBind();
+  }
+  function akVideoPanel(s) {
+    return '<section class="panel"><h2 class="h3">Vidéo</h2>' +
+      '<p class="small">' + (s.video ? 'Vidéo remplacée depuis la dashboard.' : 'Vidéo d’origine du site (' + esc(s.vid) + '.webm).') + ' Formats WebM ou MP4, 50 Mo au plus. Pour un défilement fluide, la vidéo doit avoir des images clés fréquentes, par exemple <code class="sel">ffmpeg -i source.mp4 -an -c:v libvpx-vp9 -g 6 -b:v 4M ' + esc(s.vid) + '.webm</code>.</p>' +
+      (AKS.note ? '<p class="aknote" role="status">' + AKS.note + '</p>' : '') +
+      '<div class="row"><label class="btn btn--bord btn--sm akfile">Remplacer la vidéo<input type="file" accept="video/webm,video/mp4" data-ch="akupload"></label>' +
+      (s.video ? '<button type="button" class="btn btn--line btn--sm" data-act="akorigvid">Revenir à la vidéo d’origine</button>' : '') + '</div>' +
+      '<div class="form"><div class="field"><label for="ak-dur">Durée de la vidéo (s)</label><input type="number" id="ak-dur" step="0.01" min="0.5" value="' + esc(s.dur) + '" data-ch="aknum" data-k="dur"><span class="small">Remplie toute seule quand on dépose une vidéo.</span></div>' +
+      '<div class="field"><label for="ak-len">Longueur du défilement (% d’écran)</label><input type="number" id="ak-len" step="10" min="100" value="' + esc(s.len) + '" data-ch="aknum" data-k="len"><span class="small">Plus c’est grand, plus la vidéo avance lentement entre deux textes.</span></div>' +
+      (AKS.sec === 'veste' ? '<div class="field full"><span class="lbl">Plan d’ensemble (l’image se réduit puis revient plein cadre)</span><div class="row"><label class="small">de <input type="number" step="0.1" style="width:90px" value="' + esc((s.inset || [])[0] == null ? '' : s.inset[0]) + '" data-ch="akinset" data-k="0"> s</label><label class="small">à <input type="number" step="0.1" style="width:90px" value="' + esc((s.inset || [])[1] == null ? '' : s.inset[1]) + '" data-ch="akinset" data-k="1"> s</label></div></div>' : '') +
+      (AKS.sec === 'tannerie' ? '<p class="full small">L’ouverture suit le vol du scarabée de la vidéo d’origine pour révéler AKARBI : une nouvelle vidéo garde la même révélation, au même rythme.</p>' : '') +
+      '</div></section>';
+  }
+  function akRight(s) {
+    var h = '';
+    if (AKS.sec === 'tannerie') {
+      h += '<section class="panel"><h2 class="h3">Texte sous AKARBI</h2><p class="small">Apparaît quand AKARBI est révélé, au premier geste du visiteur.</p>' + akPartsEditor(s.after, 'after', 0) + '</section>' +
+        '<section class="panel"><h2 class="h3">Invitation à défiler</h2><div class="field"><label for="ak-cue">Texte affiché au début</label><input type="text" id="ak-cue" value="' + esc(s.cue) + '" data-in="akfield" data-k="cue"></div></section>';
+    }
+    if (AKS.sec === 'pa') {
+      h += '<section class="panel"><h2 class="h3">Titre au-dessus des portraits</h2><div class="field"><input type="text" value="' + esc(s.head) + '" data-in="akfield" data-k="head" aria-label="Titre au-dessus des portraits"></div></section>';
+    }
+    if (Array.isArray(s.ov)) {
+      var list = s.ov.map(function (o, i) { return [o, i]; }).sort(function (a, b) { return a[0].at - b[0].at; });
+      h += '<section class="panel"><div class="panel__h"><div><h2 class="h3">Textes sur la vidéo</h2><p class="small">' + s.ov.length + ' textes, dans l’ordre d’apparition. Le visiteur s’arrête sur chacun.</p></div><button type="button" class="btn btn--bord btn--sm" data-act="akaddov" data-akat>+ Texte à ' + akFmt(AKS.t) + '</button></div><div class="akcards">' +
+        list.map(function (x) { return akCard(x[0], x[1], s); }).join('') + '</div></section>';
+    }
+    if (AKS.sec === 'atelier' && Array.isArray(s.rail)) {
+      h += '<section class="panel"><h2 class="h3">Étapes en bas de l’écran</h2><p class="small">L’étape s’allume à partir du moment indiqué.</p><div class="akparts">' + s.rail.map(function (r, k) {
+        return '<div class="akpart"><input type="number" step="0.1" style="width:90px" value="' + esc(r.at) + '" data-ch="akrail" data-f="at" data-k="' + k + '" aria-label="Moment (s)"><input type="text" value="' + esc(r.t) + '" data-in="akrailt" data-k="' + k + '" aria-label="Nom de l’étape"><button type="button" class="icon" data-act="akrmrail" data-k="' + k + '" aria-label="Retirer l’étape">×</button></div>';
+      }).join('') + '<button type="button" class="btn btn--line btn--sm" data-act="akaddrail" data-akat="Étape">+ Étape à ' + akFmt(AKS.t) + '</button></div></section>';
+    }
+    if (AKS.sec === 'pa') {
+      h += '<section class="panel"><h2 class="h3">Écran titre ACHIRA</h2><p class="small">Après la vidéo, avant la partie suivante.</p>' + akPartsEditor(s.title, 'title', 0) + '</section>';
+    }
+    if (AKS.sec === 'coffre') {
+      h += '<section class="panel"><h2 class="h3">La lettre</h2><p class="small">Un paragraphe par ligne. Sur téléphone, elle s’affiche en texte lisible.</p>' +
+        '<div class="field"><textarea rows="6" data-in="akletter" aria-label="Paragraphes de la lettre">' + esc((s.letter || []).join('\n')) + '</textarea></div>' +
+        '<div class="field"><label for="ak-sign">Signature</label><input type="text" id="ak-sign" value="' + esc(s.sign) + '" data-in="akfield" data-k="sign"></div></section>' +
+        '<section class="panel"><h2 class="h3">Page finale</h2><div class="form"><div class="field"><label for="ak-ft">Grand titre</label><input type="text" id="ak-ft" value="' + esc(s.finTitle) + '" data-in="akfield" data-k="finTitle"></div><div class="field"><label for="ak-fs">Sous le titre</label><input type="text" id="ak-fs" value="' + esc(s.finSub) + '" data-in="akfield" data-k="finSub"></div></div></section>';
+    }
+    h += '<section class="panel"><h2 class="h3">Revenir en arrière</h2><p class="small">Remet cette partie comme sur le site d’origine : vidéo, textes, positions et moments.</p><div><button type="button" class="btn btn--line btn--sm" data-act="akreset">Rétablir l’original de « ' + esc(AK_SECS.filter(function (x) { return x[0] === AKS.sec; })[0][1]) + ' »</button></div></section>';
+    return h;
+  }
+  function akCard(o, i, s) {
+    var on = AKS.sel === i, end = o.out === null || o.out === undefined;
+    return '<article class="akcard' + (on ? ' is-on' : '') + '" data-card="' + i + '"><div class="akcard__h"><button type="button" class="akcard__go" data-act="akgo" data-i="' + i + '"><b>' + esc(((o.parts || [])[0] || {}).t || 'Texte sans contenu') + '</b><span class="small tab">' + akFmt(o.at) + ' → ' + (end ? 'fin' : akFmt(o.out)) + '</span></button><button type="button" class="icon" data-act="akrmov" data-i="' + i + '" aria-label="Supprimer ce texte">×</button></div>' +
+      '<div class="akcard__b"><div class="akpos" role="group" aria-label="Position à l’écran">' + AK_POS.map(function (p) { return '<button type="button" data-act="akpos" data-i="' + i + '" data-v="' + p[0] + '" aria-pressed="' + (o.pos === p[0]) + '" title="' + p[1] + '" aria-label="' + p[1] + '"></button>'; }).join('') + '</div>' +
+      '<div class="aktimes"><label class="small">Apparaît à <input type="number" step="0.05" min="0" max="' + akMax(s) + '" value="' + esc(o.at) + '" data-ch="akat" data-i="' + i + '"> s</label><button type="button" class="btn btn--line btn--sm" data-act="akhere" data-i="' + i + '" data-v="at">= curseur</button>' +
+      '<label class="small">Disparaît à <input type="number" step="0.05" min="0" max="' + akMax(s) + '" value="' + (end ? '' : esc(o.out)) + '"' + (end ? ' disabled' : '') + ' data-ch="akout" data-i="' + i + '"> s</label><button type="button" class="btn btn--line btn--sm" data-act="akhere" data-i="' + i + '" data-v="out"' + (end ? ' disabled' : '') + '>= curseur</button>' +
+      '<label class="small akend"><input type="checkbox" data-ch="akend" data-i="' + i + '"' + (end ? ' checked' : '') + '> Reste jusqu’à la fin</label>' +
+      '<label class="small">Style <select data-ch="akstyle" data-i="' + i + '"><option value=""' + (!o.style ? ' selected' : '') + '>Normal</option><option value="step"' + (o.style === 'step' ? ' selected' : '') + '>Étape</option><option value="step-end"' + (o.style === 'step-end' ? ' selected' : '') + '>Étape finale</option></select></label></div>' +
+      akPartsEditor(o.parts, 'ov', i) + '</div></article>';
+  }
+  // aperçu : la vidéo au moment choisi et les textes visibles à ce moment, à leur place
+  function akPaint() {
+    var s = akS(), layer = $('#aklayer'); if (!layer) return;
+    var t = AKS.t, html = '';
+    if (Array.isArray(s.ov)) s.ov.forEach(function (o, i) {
+      var end = o.out === null || o.out === undefined ? Infinity : o.out;
+      if (t >= o.at && t < end) html += '<div class="akov akov--' + esc(o.pos) + (o.style ? ' akov--step' : '') + (AKS.sel === i ? ' is-sel' : '') + '">' + akPartsHtml(o.parts) + '</div>';
+    });
+    if (AKS.sec === 'tannerie') html += t >= s.dur * 0.9 ? '<div class="akov akov--hero"><span class="akp akp--brand">AKARBI</span>' + akPartsHtml(s.after) + '</div>' : '<div class="akov akov--b"><span class="akp akp--lead">' + esc(s.cue) + '</span></div>';
+    if (AKS.sec === 'pa' && t < 0.05) html += '<div class="akov akov--t"><span class="akp akp--h3">' + esc(s.head) + '</span></div>';
+    if (AKS.sec === 'pa' && t >= s.dur - 0.05) html += '<div class="akov akov--c"><span class="small" style="opacity:.7">puis l’écran titre :</span>' + akPartsHtml(s.title) + '</div>';
+    if (AKS.sec === 'coffre' && t > s.dur) html += '<div class="akov akov--c akletter">' + (s.letter || []).map(function (p) { return '<span class="akp akp--step-txt">' + esc(p) + '</span>'; }).join('') + '<span class="akp akp--eyebrow">' + esc(s.sign) + '</span></div>';
+    layer.innerHTML = html;
+    var clock = $('#akclock'); if (clock) clock.textContent = akFmt(t);
+    $$('[data-akat]').forEach(function (b) { b.textContent = '+ ' + (b.dataset.akat || 'Texte') + ' à ' + akFmt(t); });
+    var tl = $('#aktl');
+    if (tl && Array.isArray(s.ov)) {
+      var max = akMax(s), rows = [];
+      // une ligne par chevauchement pour que deux textes simultanés restent lisibles
+      var blocks = s.ov.map(function (o, i) { return { o: o, i: i, a: o.at, b: o.out === null || o.out === undefined ? max : o.out }; }).sort(function (x, y) { return x.a - y.a; });
+      blocks.forEach(function (bk) { var r = 0; while (rows[r] && rows[r] > bk.a + 0.001) r++; rows[r] = bk.b; bk.r = r; });
+      tl.style.height = (Math.max(1, rows.length) * 26 + 6) + 'px';
+      tl.innerHTML = blocks.map(function (bk) { return '<button type="button" class="aktl__b' + (AKS.sel === bk.i ? ' is-sel' : '') + '" data-act="akgo" data-i="' + bk.i + '" style="left:' + (bk.a / max * 100) + '%;width:' + Math.max(1.5, (bk.b - bk.a) / max * 100) + '%;top:' + (bk.r * 26 + 3) + 'px" title="' + esc(((bk.o.parts || [])[0] || {}).t || '') + '">' + esc(((bk.o.parts || [])[0] || {}).t || '') + '</button>'; }).join('') +
+        (AKS.sec === 'coffre' ? '<span class="aktl__mark" style="left:' + (s.dur / max * 100) + '%" title="Fin de la vidéo, la lettre">lettre</span>' : '') +
+        '<span class="aktl__head" style="left:' + (Math.min(t, max) / max * 100) + '%"></span>';
+    }
+  }
+  function akSeek(t) {
+    var s = akS(); AKS.t = Math.max(0, Math.min(akMax(s), t));
+    var v = $('#akvid'); if (v && v.readyState >= 1) { try { v.currentTime = Math.min(AKS.t, Math.max(0, (v.duration || s.dur) - 0.04)); } catch (e) {} }
+    var r = $('#akrange'); if (r && +r.value !== AKS.t) r.value = AKS.t;
+    akPaint();
+  }
+  var akRAF = null;
+  function akBind() {
+    var v = $('#akvid'); if (!v) return;
+    v.addEventListener('loadedmetadata', function () { akSeek(AKS.t); });
+    akPaint();
+  }
+  function akRight2() { var r = $('#akright'); if (r) r.innerHTML = akRight(akS()); akPaint(); }
+  function akSaved(msg) { save(); if (msg) toast(msg); }
+  ACT.aksec = function (b) { AKS.sec = b.dataset.v; AKS.t = 0; AKS.sel = -1; AKS.note = ''; aAkarbi(); };
+  ACT.akplay = function (b) {
+    if (akRAF) { cancelAnimationFrame(akRAF); akRAF = null; b.textContent = 'Lire'; return; }
+    b.textContent = 'Pause';
+    var last = performance.now(), max = akMax(akS());
+    if (AKS.t >= max - 0.05) AKS.t = 0;
+    (function step(now) {
+      if (!document.contains(b)) { akRAF = null; return; }
+      AKS.t += (now - last) / 1000; last = now;
+      if (AKS.t >= max) { akSeek(max); akRAF = null; b.textContent = 'Lire'; return; }
+      akSeek(AKS.t); akRAF = requestAnimationFrame(step);
+    })(last);
+  };
+  IN.akseek = function (el) { akSeek(+el.value); };
+  ACT.akgo = function (b) { var i = +b.dataset.i, o = akS().ov[i]; AKS.sel = i; var c = $('.akcard[data-card="' + i + '"]'); $$('.akcard').forEach(function (x) { x.classList.toggle('is-on', x === c); }); akSeek(o.at + Math.min(0.3, ((o.out == null ? akMax(akS()) : o.out) - o.at) / 2)); if (c && b.classList.contains('aktl__b')) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+  ACT.akpos = function (b) { var o = akS().ov[+b.dataset.i]; o.pos = b.dataset.v; AKS.sel = +b.dataset.i; $$('[data-act="akpos"][data-i="' + b.dataset.i + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); if (AKS.t < o.at || (o.out != null && AKS.t >= o.out)) akSeek(o.at + 0.05); else akPaint(); akSaved('Position enregistrée'); };
+  function akSortRender() { akRight2(); }
+  CH.akat = function (el) { var o = akS().ov[+el.dataset.i]; o.at = Math.max(0, Math.min(akMax(akS()), +el.value || 0)); if (o.out != null && o.out <= o.at) o.out = Math.round((o.at + 0.5) * 100) / 100; AKS.sel = +el.dataset.i; akSortRender(); akSeek(o.at + 0.05); akSaved('Moment enregistré'); };
+  CH.akout = function (el) { var o = akS().ov[+el.dataset.i]; var v = Math.min(akMax(akS()), +el.value || 0); o.out = v > o.at ? v : Math.round((o.at + 0.5) * 100) / 100; akSortRender(); akSaved('Moment enregistré'); };
+  CH.akend = function (el) { var o = akS().ov[+el.dataset.i]; o.out = el.checked ? null : Math.min(akMax(akS()), Math.round((o.at + 1) * 100) / 100); akSortRender(); akSaved(el.checked ? 'Le texte reste jusqu’à la fin' : 'Moment de fin ajouté'); };
+  ACT.akhere = function (b) { var o = akS().ov[+b.dataset.i], t = Math.round(AKS.t * 100) / 100; if (b.dataset.v === 'at') { o.at = t; if (o.out != null && o.out <= t) o.out = Math.round((t + 0.5) * 100) / 100; } else { o.out = t > o.at ? t : Math.round((o.at + 0.5) * 100) / 100; } AKS.sel = +b.dataset.i; akSortRender(); akSaved('Moment enregistré : ' + akFmt(t)); };
+  CH.akstyle = function (el) { akS().ov[+el.dataset.i].style = el.value; akPaint(); akSaved('Style enregistré'); };
+  ACT.akaddov = function () { var s = akS(), t = Math.round(AKS.t * 100) / 100; s.ov.push({ pos: 'c', at: t, out: Math.min(akMax(s), Math.round((t + 1.2) * 100) / 100), style: '', parts: [{ k: 'lead-xl', t: 'Nouveau texte' }] }); AKS.sel = s.ov.length - 1; akSortRender(); akSaved('Texte ajouté à ' + akFmt(t)); var c = $('.akcard[data-card="' + AKS.sel + '"] input[data-in="aktext"]'); if (c) { c.focus(); c.select(); } };
+  ACT.akrmov = function (b) { var s = akS(); s.ov.splice(+b.dataset.i, 1); AKS.sel = -1; akSortRender(); akSaved('Texte supprimé'); };
+  CH.akkind = function (el) { var p = akPartsOf(el.dataset.sc, +el.dataset.i)[+el.dataset.k]; p.k = el.value; if (p.k === 'link' && !p.href) p.href = '#h-collection'; akRight2(); akSaved('Style de ligne enregistré'); };
+  IN.aktext = function (el) { akPartsOf(el.dataset.sc, +el.dataset.i)[+el.dataset.k].t = el.value; akPaint(); var h = el.closest('.akcard'); if (h && +el.dataset.k === 0) { var b = $('.akcard__go b', h); if (b) b.textContent = el.value || 'Texte sans contenu'; } save(); };
+  IN.akhref = function (el) { akPartsOf(el.dataset.sc, +el.dataset.i)[+el.dataset.k].href = el.value.trim(); save(); };
+  ACT.akaddpart = function (b) { akPartsOf(b.dataset.sc, +b.dataset.i).push({ k: AKS.sec === 'atelier' ? 'step-txt' : 'body', t: 'Nouvelle ligne' }); akRight2(); akSaved('Ligne ajoutée'); };
+  ACT.akrmpart = function (b) { akPartsOf(b.dataset.sc, +b.dataset.i).splice(+b.dataset.k, 1); akRight2(); akSaved('Ligne retirée'); };
+  IN.akfield = function (el) { akS()[el.dataset.k] = el.value; akPaint(); save(); };
+  IN.akletter = function (el) { akS().letter = el.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); akPaint(); save(); };
+  CH.aknum = function (el) { var v = +el.value; if (!(v > 0)) return; akS()[el.dataset.k] = v; if (el.dataset.k === 'dur') { var r = $('#akrange'); if (r) r.max = akMax(akS()); akPaint(); } akSaved(el.dataset.k === 'dur' ? 'Durée enregistrée' : 'Longueur du défilement enregistrée'); };
+  CH.akinset = function (el) { var s = akS(); s.inset = s.inset ? s.inset.slice() : ['', '']; s.inset[+el.dataset.k] = el.value === '' ? '' : +el.value; if (s.inset[0] === '' && s.inset[1] === '') s.inset = null; else if (s.inset[0] === '' || s.inset[1] === '') return; akSaved('Plan d’ensemble enregistré'); };
+  CH.akrail = function (el) { akS().rail[+el.dataset.k].at = +el.value || 0; akSaved('Étape enregistrée'); };
+  IN.akrailt = function (el) { akS().rail[+el.dataset.k].t = el.value; save(); };
+  ACT.akaddrail = function () { akS().rail.push({ at: Math.round(AKS.t * 10) / 10, t: 'Étape' }); akS().rail.sort(function (a, b) { return a.at - b.at; }); akRight2(); akSaved('Étape ajoutée'); };
+  ACT.akrmrail = function (b) { akS().rail.splice(+b.dataset.k, 1); akRight2(); akSaved('Étape retirée'); };
+  ACT.akreset = function (b) {
+    if (!b.dataset.confirm) { b.dataset.confirm = '1'; b.textContent = 'Confirmer : tout remettre comme à l’origine'; b.className = 'btn btn--bord btn--sm'; return; }
+    AK()[AKS.sec] = akClone(window.AKARBI_DEFAUT[AKS.sec]); AKS.sel = -1; AKS.note = ''; akSaved('Partie rétablie comme à l’origine'); aAkarbi();
+  };
+  ACT.akorigvid = function () { var s = akS(), d = window.AKARBI_DEFAUT[AKS.sec]; s.video = ''; s.poster = ''; AKS.note = akDurNote(s.dur, d.dur); s.dur = d.dur; akSaved('Vidéo d’origine rétablie'); aAkarbi(); };
+  // une nouvelle durée : on propose de garder les textes aux mêmes endroits de l'histoire (en proportion)
+  function akDurNote(oldD, newD) {
+    if (Math.abs(oldD - newD) < 0.05) return '';
+    AKS.scale = [oldD, newD];
+    return 'La vidéo dure maintenant ' + akFmt(newD) + ' (avant ' + akFmt(oldD) + '). <button type="button" class="btn btn--line btn--sm" data-act="akscale">Adapter les moments des textes à la nouvelle durée</button>';
+  }
+  ACT.akscale = function () {
+    var s = akS(), k = AKS.scale ? AKS.scale[1] / AKS.scale[0] : 1, r = function (x) { return Math.round(x * k * 100) / 100; };
+    (s.ov || []).forEach(function (o) { o.at = r(o.at); if (o.out != null) o.out = r(o.out); });
+    (s.rail || []).forEach(function (x) { x.at = r(x.at); });
+    if (Array.isArray(s.inset)) s.inset = s.inset.map(r);
+    AKS.note = ''; AKS.scale = null; akSaved('Moments adaptés à la nouvelle durée'); aAkarbi();
+  };
+  CH.akupload = async function (el) {
+    var f = el.files && el.files[0]; if (!f) return;
+    if (!/^video\/(webm|mp4)$/.test(f.type)) { toast('Choisis une vidéo WebM ou MP4'); return; }
+    if (f.size > 50 * 1024 * 1024) { toast('La vidéo dépasse 50 Mo'); return; }
+    if (!ONLINE) { toast('Le dépôt de vidéo demande la connexion à la base'); return; }
+    var s = akS(), sec = AKS.sec, stamp = Date.now(), ext = f.type === 'video/mp4' ? 'mp4' : 'webm';
+    toast('Envoi de la vidéo…');
+    // durée et image d'attente lues dans le navigateur, depuis le fichier choisi
+    var info = await new Promise(function (res) {
+      var v = document.createElement('video'), u = URL.createObjectURL(f); v.muted = true; v.preload = 'auto'; v.src = u;
+      v.addEventListener('loadeddata', function () { var d = v.duration; v.currentTime = Math.min(0.05, d / 2); v.addEventListener('seeked', function () {
+        var c = document.createElement('canvas'); c.width = Math.min(1920, v.videoWidth); c.height = Math.round(c.width * v.videoHeight / v.videoWidth);
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+        c.toBlob(function (b) { URL.revokeObjectURL(u); res({ dur: d, poster: b }); }, 'image/webp', 0.8);
+      }, { once: true }); }, { once: true });
+      v.addEventListener('error', function () { URL.revokeObjectURL(u); res({ dur: 0, poster: null }); }, { once: true });
+    });
+    var up = await SB.storage.from('akarbi').upload(sec + '-' + stamp + '.' + ext, f, { contentType: f.type, cacheControl: '31536000' });
+    if (up.error) { toast('Échec de l’envoi : ' + up.error.message); return; }
+    var url = SB.storage.from('akarbi').getPublicUrl(up.data.path).data.publicUrl, poster = '';
+    if (info.poster) { var pu = await SB.storage.from('akarbi').upload(sec + '-' + stamp + '.webp', info.poster, { contentType: 'image/webp', cacheControl: '31536000' }); if (!pu.error) poster = SB.storage.from('akarbi').getPublicUrl(pu.data.path).data.publicUrl; }
+    var oldD = +s.dur;
+    s.video = url; s.poster = poster;
+    if (info.dur > 0.5 && isFinite(info.dur)) s.dur = Math.round(info.dur * 100) / 100;
+    AKS.note = akDurNote(oldD, +s.dur); AKS.t = 0;
+    akSaved('Vidéo remplacée'); aAkarbi();
+  };
+
   /* ----- Réglages ----- */
   function aReglages() {
     admin('Administration', 'Réglages', '',
@@ -1760,7 +1998,7 @@
 
   /* ---------- Démarrage ---------- */
   var PAGES = { home: pHome, sides: pSides, deposer: pDeposer, projets: pProjets, projet: pProjet, metiers: pMetiers, cercle: pCercle, membres: pMembres, rejoindre: pRejoindre,
-    'admin-dash': aDash, 'admin-demande': aDemande,'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages };
+    'admin-dash': aDash, 'admin-demande': aDemande,'admin-projets': aProjets, 'admin-projet': aProjet, 'admin-modele': aModele, 'admin-contenus': aContenus, 'admin-membres': aMembres, 'admin-candidatures': aCandidatures, 'admin-reglages': aReglages, 'admin-akarbi': aAkarbi };
   ACT.logout = async function () { await SB.auth.signOut(); loginView('Tu es déconnecté.'); };
   ACT.reload = async function () { try { await loadAdmin(); RERENDER(); toast('Données rechargées depuis la base'); } catch (e) { toast(e.message); } };
   ACT.setpw = async function () {
