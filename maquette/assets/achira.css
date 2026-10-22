@@ -1007,3 +1007,4 @@ tr.click { cursor: pointer; } tr.click:hover td { background: rgba(238,229,211,.
 }
 .band > .in { grid-template-columns: minmax(0, 1fr); }
 .band > .in > * { min-width: 0; }
+.foot { position: relative; z-index: 1; }
