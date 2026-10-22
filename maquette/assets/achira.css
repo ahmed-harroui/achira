@@ -1005,3 +1005,5 @@ tr.click { cursor: pointer; } tr.click:hover td { background: rgba(238,229,211,.
   .role .h4 { font-size: 15px; }
   .role > .btn { min-height: 32px; padding: 0 12px; font-size: 10px; }
 }
+.band > .in { grid-template-columns: minmax(0, 1fr); }
+.band > .in > * { min-width: 0; }
