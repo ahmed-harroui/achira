@@ -727,6 +727,33 @@ html[dir="rtl"] .pin-bg--photo::after { background: linear-gradient(270deg, rgba
 html[dir="rtl"] .ex__item.is-on { box-shadow: inset -2px 0 0 var(--achira); }
 html[dir="rtl"] input[type=search] { margin-left: 0 !important; }
 
+/* ---------- Devenir membre ---------- */
+.jm { position: fixed; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgba(5,1,2,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.jm__box { position: relative; width: min(680px, 100%); max-height: calc(100vh - 32px); max-height: calc(100svh - 32px); overflow-y: auto; display: grid; gap: 16px; padding: clamp(22px, 3vw, 34px); border-radius: 22px; background: var(--panel); border: 1px solid var(--iv30); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.jm__close { position: absolute; top: 16px; right: 16px; }
+html[dir="rtl"] .jm__close { right: auto; left: 16px; }
+.jm__box .h2 { font-size: clamp(32px, 4vw, 48px); padding-right: 40px; }
+.jm__body { display: grid; gap: 16px; }
+.jm__body .chips .chip { text-transform: none; letter-spacing: 0; font: 500 13px/1.2 var(--sans); padding: 10px 14px; }
+.jm__nav { justify-content: flex-end; }
+.jm__err { color: #f3a3b1; min-height: 1em; }
+.jm__consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--iv80); cursor: pointer; }
+.jm__consent input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--achira); flex: none; }
+.jm__code { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; padding: 18px; border-radius: 16px; background: rgba(127,11,31,.2); border: 1px dashed rgba(197,166,118,.6); }
+.jm__code b { font: 400 clamp(34px, 5vw, 48px)/1 var(--brand); letter-spacing: .12em; color: var(--ivory); user-select: all; }
+.jm__steps { display: grid; gap: 10px; }
+.jm__steps li { display: flex; gap: 12px; align-items: baseline; color: var(--iv80); }
+.jm__box .glow-cta { justify-self: start; }
+.mcard--join { display: grid; gap: 10px; align-content: start; text-align: left; padding: 0; color: var(--ivory); border-radius: 14px; transition: transform .35s var(--ease); }
+.mcard--join:hover { transform: translateY(-3px); }
+.mcard--join .mcard__ph { border: 1px dashed var(--iv30); background: radial-gradient(70% 60% at 50% 40%, rgba(127,11,31,.35), transparent 70%), var(--panel); }
+.mcard--join .mcard__ph span { color: var(--champ); }
+.tag-kind { font: 700 9px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; padding: 5px 8px; border-radius: 999px; }
+.tag-kind--m { background: var(--champ); color: var(--ink); }
+.tag-kind--c { border: 1px solid var(--iv30); color: var(--iv80); }
+.adh { display: grid; gap: 6px; padding: 12px 14px; border-radius: 12px; background: rgba(197,166,118,.07); border: 1px solid rgba(197,166,118,.25); }
+.adh .lbl { margin-right: 8px; }
+
 /* ---------- Discord ---------- */
 .discord-band { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: clamp(20px, 3vw, 32px); border-radius: 18px; border: 1px solid var(--iv14); background: radial-gradient(90% 140% at 100% 50%, rgba(127,11,31,.28), transparent 70%), var(--panel); }
 .discord-band > div { display: grid; gap: 8px; min-width: 0; }

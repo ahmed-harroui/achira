@@ -115,11 +115,11 @@
       .filter(function (x) { return x.d; }).sort(function (a, b) { return b.score - a.score || a.d.n - b.d.n; });
     list.forEach(function (x) { x.level = x.score >= 4 ? 'Prioritaire' : x.score >= 2 ? 'Important' : 'Utile'; });
     var ids = list.map(function (x) { return x.d.id; });
-    var members = db.members.map(function (m) {
+    var members = db.members.filter(function (m) { return m.visible !== false; }).map(function (m) {
       var md = memberDomainsIn(db, m).filter(function (id) { return ids.indexOf(id) > -1; });
       return { m: m, ds: md, score: md.reduce(function (a, id) { return a + list.find(function (x) { return x.d.id === id; }).score; }, 0) };
     }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score; });
-    var have = db.members.map(function (m) { return norm(m.metier); });
+    var have = db.members.filter(function (m) { return m.visible !== false; }).map(function (m) { return norm(m.metier); });
     var missing = [];
     list.filter(function (x) { return x.score >= 3; }).forEach(function (x) { x.d.metiers.forEach(function (j) { if (have.indexOf(norm(j)) < 0 && !missing.some(function (y) { return y.job === j; })) missing.push({ job: j, d: x.d }); }); });
     return { list: list, members: members, missing: missing };
@@ -170,13 +170,14 @@
       achira: !!p.achira, specialite: p.specialite || '', origin: p.market ? 'marche' : p.origin === 'depot' ? 'depot' : 'cercle', sides: p.sides || {}, answers: p.answers || null, market: p.market || null,
       submitter: p.submitter ? { name: p.submitter.name, email: p.submitter.email } : null };
   }
-  function rowToMember(r) { return { id: r.id, slug: r.slug, name: r.name, metier: r.metier, type: r.type || '', city: r.city || '', bio: r.bio || '', domains: r.domains || [], img: r.img || '', email: r.email || '' }; }
+  function rowToMember(r) { return { id: r.id, slug: r.slug, name: r.name, metier: r.metier, type: r.type || '', city: r.city || '', bio: r.bio || '', domains: r.domains || [], img: r.img || '', email: r.email || '', visible: r.visible !== false, details: r.details || {} }; }
   function memberToRow(m) {
     var j = window.ACHIRA_ARBRE.jobs.find(function (x) { return norm(x.label) === norm(m.metier); });
-    return { id: m.id, slug: m.slug || slug(m.name), name: m.name, metier: m.metier, job_id: j ? j.id : null, type: DB.pros.indexOf(m.type) > -1 ? m.type : null, city: m.city || '', bio: m.bio || '', domains: m.domains || [], img: m.img || null };
+    return { id: m.id, slug: m.slug || slug(m.name), name: m.name, metier: m.metier, job_id: j ? j.id : null, type: MTYPES.indexOf(m.type) > -1 ? m.type : null, city: m.city || '', bio: m.bio || '', domains: m.domains || [], img: m.img || null, visible: m.visible !== false, details: m.details || {} };
   }
-  function rowToSub(r) { return { id: r.id, name: r.name, email: r.email, metier: r.metier, type: r.type || '', project: r.project || '', domain: r.domain || '', link: r.link || '', msg: r.msg || '', status: r.status, notes: r.notes || '', when: new Date(r.created_at).toLocaleDateString('fr-FR') }; }
-  function subToRow(s) { return { id: s.id, name: s.name, email: s.email, metier: s.metier, type: s.type || null, project: s.project || null, domain: s.domain || null, link: s.link || null, msg: s.msg || null, status: s.status, notes: s.notes || null }; }
+  function rowToSub(r) { return { id: r.id, name: r.name, email: r.email, metier: r.metier, type: r.type || '', project: r.project || '', domain: r.domain || '', link: r.link || '', msg: r.msg || '', status: r.status, notes: r.notes || '', kind: r.kind || 'candidature', details: r.details || {}, when: new Date(r.created_at).toLocaleDateString('fr-FR') }; }
+  function subToRow(s) { return { id: s.id, name: s.name, email: s.email, metier: s.metier, type: s.type || null, project: s.project || null, domain: s.domain || null, link: s.link || null, msg: s.msg || null, status: s.status, notes: s.notes || null, kind: s.kind || 'candidature', details: s.details || {} }; }
+  var MTYPES = ['Salarié', 'Indépendant', 'Cabinet', 'Groupe ou collectif', 'Entreprise ou service'];
   var COLL = { projects: ['projects', 'slug', projectToRow], members: ['members', 'id', memberToRow], subs: ['submissions', 'id', subToRow] };
   function snapshot() {
     SNAP = {};
@@ -300,7 +301,7 @@
   var ACT = {}, CH = {}, IN = {};
   ACT.ach = function (b) { var p = proj(b.dataset.s); p.achira = !p.achira; save(); toast(p.achira ? 'Spécialité ACHIRA activée' : 'Spécialité ACHIRA retirée'); RERENDER(); };
   /* Animation après une modification : on retrouve l'élément touché (même après un nouveau rendu) et on l'illumine */
-  var NO_FLASH = { lang: 1, way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
+  var NO_FLASH = { joinopen: 1, joinclose: 1, jmnext: 1, jmprev: 1, jmpick: 1, jmside: 1, jmcopy: 1, jmsend: 1, jmdiscord: 1, ck: 1, lang: 1, way: 1, fymode: 1, fycat: 1, fyphase: 1, pcat: 1, wizsheet: 1, alert: 1, msgopen: 1, msgclose: 1, msgtab: 1, msgreload: 1, msgallread: 1, search: 1, searchclose: 1, searchgo: 1, menu: 1, mm: 1, 'mm-all': 1, exd: 1, exj: 1, exback: 1, exview: 1, sheet: 1, close: 1, wopt: 1, phase: 1, pole: 1, mp: 1, as: 1, ao: 1, apr: 1, aach: 1, cf: 1, sf: 1, dmsrc: 1, pickd: 1, goedit: 1, logout: 1, mjclear: 1, sx: 1 };
   function selOf(el) {
     var parts = ['[data-act="' + el.dataset.act + '"]'];
     ['s', 'd', 'm', 'v', 'id', 'k', 'q', 'i'].forEach(function (k) { if (el.dataset[k] !== undefined) parts.push('[data-' + k + '="' + String(el.dataset[k]).replace(/"/g, '\\"') + '"]'); });
@@ -464,7 +465,7 @@
 
   /* ================= RECHERCHE (sides, missions, compétences, métiers, membres, projets) ================= */
   var IS_ADMIN = PAGE.indexOf('admin-') === 0;
-  function jobMembers(job) { return DB.members.filter(function (m) { return norm(m.metier) === norm(job); }); }
+  function jobMembers(job) { return DB.members.filter(function (m) { return m.visible !== false && norm(m.metier) === norm(job); }); }
   function searchIndex() {
     var it = [], skills = {}, jobs = {};
     DB.domains.forEach(function (d) {
@@ -827,7 +828,7 @@
   function pProjet() {
     var p = proj(hash()) || pubProjects()[0];
     var c = cov(p), roles = rolesOf(p);
-    var leads = []; DB.domains.forEach(function (d) { var s = p.sides[d.id]; if (s && s.lead && s.s !== 'na') { var m = mem(s.lead); var e = leads.find(function (x) { return x.m === m; }); if (e) e.d.push(d); else leads.push({ m: m, d: [d] }); } });
+    var leads = []; DB.domains.forEach(function (d) { var s = p.sides[d.id]; if (s && s.lead && s.s !== 'na') { var m = mem(s.lead); if (!m) return; var e = leads.find(function (x) { return x.m === m; }); if (e) e.d.push(d); else leads.push({ m: m, d: [d] }); } });
     var others = pubProjects().filter(function (x) { return x !== p; }).slice(0, 2);
     document.title = p.title + ' — ACHIRA';
     shell(
@@ -931,13 +932,118 @@
   function pMembres() {
     var h = hash(); MJ = '';
     if (h.indexOf('job-') === 0) allJobs().forEach(function (j) { if ('job-' + slug(j) === h) MJ = j; });
-    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Membres</p><h1 class="h1 rv">Celles et ceux qui avancent.</h1><p class="lead rv" style="max-width:36ch">Chaque membre exerce un métier de l’arbre ; ce métier le relie aux sides qu’il peut porter.</p></div></section>' +
+    shell('<section class="phero"><div class="in"><p class="eyebrow rv">Membres</p><h1 class="h1 rv">Celles et ceux qui avancent.</h1><p class="lead rv" style="max-width:36ch">Chaque membre exerce un métier de l’arbre ; ce métier le relie aux sides qu’il peut porter.</p>' +
+      '<div class="row rv"><button type="button" class="btn btn--bord glow-cta" data-act="joinopen">Devenir membre <span aria-hidden="true">→</span></button><span class="small">5 étapes · 3 minutes · validation sur Discord</span></div></div></section>' +
       '<section class="band dark band--tight"><div class="in"><div class="toolbar"><input type="search" data-in="mq" value="' + esc(MQ) + '" placeholder="Rechercher un nom, un métier, une ville, un side…" aria-label="Rechercher un membre" style="max-width:340px">' +
       '<select data-ch="mj" aria-label="Métier" style="max-width:260px"><option value="">Tous les métiers</option>' + allJobs().map(function (j) { var n = jobMembers(j).length; return '<option value="' + esc(j) + '"' + (MJ === j ? ' selected' : '') + '>' + esc(j) + ' (' + n + ')</option>'; }).join('') + '</select>' +
       '<div class="chips" role="group" aria-label="Pôle">' + [['tous', 'Tous']].concat(DB.poles.map(function (p) { return [p.id, p.t]; })).map(function (x) { return '<button class="chip" type="button" data-act="mp" data-v="' + x[0] + '" aria-pressed="' + (MP === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div></div>' +
       '<div id="jobinfo"></div><div class="mgrid" id="results"></div></div></section>');
     renderMembres();
   }
+  /* ----- Devenir membre : questionnaire en 5 étapes, enregistré puis finalisé sur Discord ----- */
+  var JM = null;
+  var JM_EXP = ['Moins de 2 ans', '2 à 5 ans', '5 à 10 ans', 'Plus de 10 ans'];
+  var JM_DISPO = ['Quelques heures par mois', 'Un projet à la fois', 'Régulièrement'];
+  var JM_CONTRIB = ['Porter un side de projet', 'Conseiller ponctuellement', 'Former et transmettre', 'Participer aux rencontres'];
+  var JM_LANGS = ['Français', 'Arabe', 'Darija', 'Amazigh', 'Anglais'];
+  var JM_STEPS = ['Qui êtes-vous ?', 'Votre métier', 'Votre travail', 'Comment vous voulez avancer', 'Contact et Discord'];
+  function jmCode() { var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', c = 'ACH-'; for (var i = 0; i < 4; i++) c += a[Math.floor(Math.random() * a.length)]; return c; }
+  function jmChips(key, list, multi) {
+    var cur = JM.d[key] || (multi ? [] : '');
+    return '<div class="chips">' + list.map(function (o) { var on = multi ? cur.indexOf(o) > -1 : cur === o; return '<button type="button" class="chip" data-act="jmpick" data-k="' + key + '" data-v="' + esc(o) + '" data-m="' + (multi ? 1 : 0) + '" aria-pressed="' + on + '">' + esc(o) + '</button>'; }).join('') + '</div>';
+  }
+  function jmField(id, label, val, extra) { return '<div class="field"><label for="jm-' + id + '">' + label + '</label><input type="' + (extra && extra.type || 'text') + '" id="jm-' + id + '" data-in="jmtxt" data-k="' + id + '" value="' + esc(val || '') + '"' + (extra && extra.list ? ' list="' + extra.list + '"' : '') + (extra && extra.ph ? ' placeholder="' + esc(extra.ph) + '"' : '') + (extra && extra.ac ? ' autocomplete="' + extra.ac + '"' : '') + '></div>'; }
+  function renderJoin() {
+    var box = $('#jmbox'); if (!box) return;
+    var d = JM.d, s = JM.step, body = '';
+    if (JM.done) {
+      box.innerHTML = '<button type="button" class="sheet__close jm__close" data-act="joinclose" aria-label="Fermer">×</button>' +
+        '<p class="eyebrow">Dernière étape · Discord</p><h2 class="h2">Envoie ton code sur Discord.</h2>' +
+        '<p class="body">Ta demande est enregistrée. Pour la valider, l’équipe doit te retrouver sur Discord : c’est là que le cercle se parle.</p>' +
+        '<div class="jm__code"><span class="lbl">Ton code</span><b class="tab" id="jmcode">' + esc(JM.code) + '</b><button type="button" class="btn btn--line btn--sm" data-act="jmcopy">Copier le code</button></div>' +
+        '<ol class="jm__steps"><li><span class="num">01</span><span>Rejoins le serveur Discord ACHIRA.</span></li><li><span class="num">02</span><span>Dans le salon « devenir-membre », envoie ton code <b>' + esc(JM.code) + '</b> et ton pseudo <b>' + esc(d.discord || '') + '</b>.</span></li><li><span class="num">03</span><span>L’équipe valide ta demande : ton profil apparaît sur la page Membres.</span></li></ol>' +
+        '<a class="btn btn--bord glow-cta" href="' + esc(discordUrl()) + '" target="_blank" rel="noopener" data-act="jmdiscord">Ouvrir Discord et envoyer mon code ↗</a>';
+      return;
+    }
+    if (s === 0) body = jmField('name', 'Nom (personne, groupe, cabinet ou entreprise)', d.name, { ac: 'name' }) +
+      '<div class="field"><span class="lbl">Vous êtes</span>' + jmChips('type', PROFILS, false) + '</div>' + jmField('city', 'Ville', d.city, { ac: 'address-level2' });
+    if (s === 1) {
+      var sides = d.sides || [], comps = [];
+      DB.domains.filter(function (x) { return sides.indexOf(x.id) > -1; }).forEach(function (x) { x.comp.forEach(function (c) { if (comps.indexOf(c) < 0) comps.push(c); }); });
+      body = jmField('metier', 'Votre métier ou votre service', d.metier, { list: 'jm-jobs', ph: 'Ex. Comptable, Photographe, Agence de communication…' }) + '<datalist id="jm-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist>' +
+        '<div class="field"><span class="lbl">Expérience</span>' + jmChips('experience', JM_EXP, false) + '</div>' +
+        '<div class="field"><span class="lbl">Les sides que vous pouvez porter</span><p class="small">Ceux de votre métier sont déjà cochés.</p><div class="chips">' + DB.domains.map(function (x) { return '<button type="button" class="chip" data-act="jmside" data-d="' + x.id + '" aria-pressed="' + (sides.indexOf(x.id) > -1) + '">' + pad(x.n) + ' ' + esc(x.t) + '</button>'; }).join('') + '</div></div>' +
+        (comps.length ? '<div class="field"><span class="lbl">Vos compétences</span>' + jmChips('skills', comps, true) + '</div>' : '');
+    }
+    if (s === 2) body = '<div class="field"><label for="jm-bio">Présentez-vous en quelques lignes</label><textarea id="jm-bio" data-in="jmtxt" data-k="bio" maxlength="280" placeholder="Ce que vous faites, ce que vous aimez construire. Ce texte s’affichera sur votre profil.">' + esc(d.bio || '') + '</textarea><span class="small"><span id="jm-bio-n">' + (d.bio || '').length + '</span> / 280</span></div>' +
+      jmField('link', 'Portfolio, site ou Instagram', d.link, { type: 'url', ph: 'https://' });
+    if (s === 3) body = '<div class="field"><span class="lbl">Disponibilité</span>' + jmChips('availability', JM_DISPO, false) + '</div>' +
+      '<div class="field"><span class="lbl">Comment voulez-vous contribuer ?</span>' + jmChips('contrib', JM_CONTRIB, true) + '</div>' +
+      '<div class="field"><span class="lbl">Langues</span>' + jmChips('langs', JM_LANGS, true) + '</div>';
+    if (s === 4) body = jmField('email', 'E-mail', d.email, { type: 'email', ac: 'email' }) + jmField('phone', 'Téléphone (facultatif)', d.phone, { type: 'tel', ac: 'tel' }) +
+      jmField('discord', 'Pseudo Discord', d.discord, { ph: 'Ex. ahmed.achira' }) +
+      '<label class="jm__consent"><input type="checkbox" id="jm-consent" data-ch="jmconsent"' + (d.consent ? ' checked' : '') + '> <span>J’accepte que mon nom, mon métier, ma ville et ma présentation s’affichent sur le site ACHIRA si ma demande est acceptée.</span></label>';
+    box.innerHTML = '<button type="button" class="sheet__close jm__close" data-act="joinclose" aria-label="Fermer">×</button>' +
+      '<p class="eyebrow">Devenir membre · étape ' + (s + 1) + ' / 5</p><div class="wiz__prog"><span style="width:' + ((s + 1) * 20) + '%"></span></div><h2 class="h2">' + JM_STEPS[s] + '</h2>' +
+      '<div class="jm__body">' + body + '</div><p class="small jm__err" id="jm-err" role="alert"></p>' +
+      '<div class="row jm__nav">' + (s > 0 ? '<button type="button" class="btn btn--line" data-act="jmprev">Précédent</button>' : '') +
+      (s < 4 ? '<button type="button" class="btn btn--solid" data-act="jmnext">Suivant</button>' : '<button type="button" class="btn btn--bord" data-act="jmsend">Envoyer et passer à Discord</button>') + '</div>';
+    var f = box.querySelector('input:not([type=checkbox]), textarea'); if (f && !f.value) setTimeout(function () { f.focus(); }, 30);
+  }
+  function jmCheck() {
+    var d = JM.d, e = '';
+    if (JM.step === 0 && (!d.name || !d.type || !d.city)) e = 'Indiquez votre nom, ce que vous êtes et votre ville.';
+    if (JM.step === 1 && (!d.metier || !(d.sides || []).length)) e = 'Indiquez votre métier et au moins un side.';
+    if (JM.step === 2 && (!d.bio || d.bio.length < 20)) e = 'Présentez-vous en au moins une phrase (20 caractères).';
+    if (JM.step === 3 && (!d.availability || !(d.contrib || []).length)) e = 'Choisissez une disponibilité et au moins une façon de contribuer.';
+    if (JM.step === 4 && (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email || '') || !d.discord || !d.consent)) e = 'Indiquez un e-mail valide, votre pseudo Discord et cochez l’accord.';
+    $('#jm-err').textContent = e; return !e;
+  }
+  ACT.joinopen = function () {
+    JM = JM && !JM.done ? JM : { step: 0, d: { type: '', sides: [], skills: [], contrib: [], langs: [] } };
+    var o = $('#jm'); if (!o) { o = document.createElement('div'); o.id = 'jm'; o.className = 'jm'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Devenir membre'); o.innerHTML = '<div class="jm__box" id="jmbox"></div>'; o.addEventListener('click', function (e) { if (e.target === o) ACT.joinclose(); }); document.body.appendChild(o); }
+    o.hidden = false; document.body.style.overflow = 'hidden'; renderJoin();
+  };
+  ACT.joinclose = function () { var o = $('#jm'); if (o) o.hidden = true; document.body.style.overflow = ''; if (JM && JM.done) JM = null; };
+  ACT.jmnext = function () { if (jmCheck()) { JM.step++; renderJoin(); $('#jmbox').scrollTop = 0; } };
+  ACT.jmprev = function () { JM.step--; renderJoin(); };
+  ACT.jmpick = function (b) {
+    var k = b.dataset.k, v = b.dataset.v;
+    if (b.dataset.m === '1') { var a = JM.d[k] = JM.d[k] || [], i = a.indexOf(v); if (i > -1) a.splice(i, 1); else a.push(v); } else JM.d[k] = JM.d[k] === v ? '' : v;
+    renderJoin();
+  };
+  ACT.jmside = function (b) { var a = JM.d.sides, i = a.indexOf(b.dataset.d); if (i > -1) a.splice(i, 1); else a.push(b.dataset.d); renderJoin(); };
+  IN.jmtxt = function (el) {
+    var k = el.dataset.k, prevJob = JM.d.metier; JM.d[k] = el.value.trim();
+    if (k === 'bio') { var n = $('#jm-bio-n'); if (n) n.textContent = el.value.length; }
+    if (k === 'metier' && JM.d.metier !== prevJob) {
+      var mine = DB.domains.filter(function (x) { return x.metiers.some(function (j) { return norm(j) === norm(JM.d.metier); }); }).map(function (x) { return x.id; });
+      if (mine.length) { mine.forEach(function (id) { if (JM.d.sides.indexOf(id) < 0) JM.d.sides.push(id); }); var pos = el.selectionStart; renderJoin(); var f = $('#jm-metier'); if (f) { f.focus(); f.setSelectionRange(pos, pos); } }
+    }
+  };
+  CH.jmconsent = function (el) { JM.d.consent = el.checked; };
+  ACT.jmcopy = function () {
+    var done = function () { toast('Code copié : ' + JM.code); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(JM.code).then(done, function () { toast('Code : ' + JM.code); }); else toast('Code : ' + JM.code);
+  };
+  ACT.jmsend = function (b) {
+    if (!jmCheck()) return;
+    var d = JM.d, code = jmCode();
+    var sub = { id: Date.now(), name: d.name, email: d.email, metier: d.metier, type: d.type, project: '', domain: '', link: d.link || '', msg: d.bio, status: 'new', kind: 'membre', when: 'à l’instant',
+      details: { code: code, city: d.city, phone: d.phone || '', discord: d.discord, experience: d.experience || '', sides: d.sides, skills: d.skills, availability: d.availability, contrib: d.contrib, langs: d.langs, consent: true, lang: LANG } };
+    var finish = function () { JM.done = true; JM.code = code; renderJoin(); $('#jmbox').scrollTop = 0; };
+    if (ONLINE) {
+      var row = subToRow(sub); delete row.id; delete row.notes;
+      b.disabled = true; b.textContent = 'Envoi…';
+      SB.from('submissions').insert(row).then(function (res) {
+        if (res.error) { b.disabled = false; b.textContent = 'Envoyer et passer à Discord'; $('#jm-err').textContent = 'L’envoi n’a pas abouti. Réessayez dans un instant.'; return; }
+        finish();
+      });
+      return;
+    }
+    DB.subs.unshift(sub); save(); finish();
+  };
+
   function renderMembres() {
     var pole = DB.poles.find(function (p) { return p.id === MP; }), q = norm(MQ).split(/\s+/).filter(Boolean);
     var info = $('#jobinfo');
@@ -953,7 +1059,8 @@
       var n = DB.projects.filter(function (p) { return p.status === 'pub' && Object.keys(p.sides).some(function (k) { return p.sides[k].lead === m.id && p.sides[k].s !== 'na'; }); }).length;
       return '<div class="mcard" id="' + esc(m.slug) + '"><div class="mcard__ph">' + (m.img ? '<img src="' + img(m.img) + '" alt="' + esc(m.name) + '" loading="lazy">' : '<span>' + esc(m.name[0]) + '</span>') + '</div><div><h3 class="h3" style="font-size:28px">' + esc(m.name) + '</h3><p class="small"><a href="membres.html#job-' + slug(m.metier) + '" style="color:var(--champ)">' + esc(m.metier) + '</a> · ' + esc(m.type) + (m.city ? ' · ' + esc(m.city) : '') + '</p></div><p>' + esc(m.bio) + '</p>' +
         '<div class="chips">' + memberDomainsIn(DB, m).map(dom).filter(Boolean).map(function (d) { return '<a class="chip" href="sides.html#' + d.id + '">' + pad(d.n) + ' ' + esc(d.t) + '</a>'; }).join('') + '</div><p class="small tab">' + n + ' projet' + (n > 1 ? 's' : '') + ' en cours ou terminés</p></div>';
-    }).join('') : '<p class="body">Aucun membre ne correspond. <a class="link" href="rejoindre.html">Tu exerces ce métier ? Rejoins le cercle <span>→</span></a></p>';
+    }).join('') + '<button type="button" class="mcard mcard--join" data-act="joinopen"><span class="mcard__ph"><span>+</span></span><span class="h3" style="font-size:28px">Et vous ?</span><span class="small">Votre métier manque au cercle ? Devenez membre : 5 étapes, puis validation sur Discord.</span><span class="link">Devenir membre <span>→</span></span></button>'
+      : '<div class="fy-empty"><p class="body">Aucun membre ne correspond.</p><button type="button" class="btn btn--bord btn--sm" data-act="joinopen">Vous exercez ce métier ? Devenez membre</button></div>';
   }
   ACT.mp = function (b) { MP = b.dataset.v; $$('[data-act=mp]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderMembres(); };
   ACT.mjclear = function () { MJ = ''; history.replaceState(null, '', location.pathname); var s = $('[data-ch=mj]'); if (s) s.value = ''; renderMembres(); };
@@ -1143,7 +1250,7 @@
   /* ================= MESSAGES DE L'ÉQUIPE ================= */
   var MSGT = { recrutement: 'Recrutement', projet: 'Projet déposé', candidature: 'Candidature', question: 'Question', note: 'Note d’équipe' };
   var MSENT = {};
-  function domainCovered(d) { return DB.members.some(function (m) { return memberDomainsIn(DB, m).indexOf(d.id) > -1; }); }
+  function domainCovered(d) { return DB.members.some(function (m) { return m.visible !== false && memberDomainsIn(DB, m).indexOf(d.id) > -1; }); }
   function sendMessage(m) {
     m = { type: m.type, title: String(m.title).slice(0, 200), body: m.body ? String(m.body).slice(0, 3000) : null, payload: m.payload || {}, author: m.author ? String(m.author).slice(0, 200) : null };
     if (ONLINE) return SB.from('messages').insert(m).then(function (r) {
@@ -1561,8 +1668,10 @@
   var NEWD = [];
   function aMembres() {
     admin('Contenu', 'Membres', '',
-      '<section class="panel"><div class="tbl"><table><thead><tr><th>Membre</th><th>Métier</th><th>Statut</th><th>Sides</th><th></th></tr></thead><tbody>' +
-      DB.members.map(function (m) { return '<tr><td><div class="pname">' + avatar(m, true) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.city) + '</span></div></div></td><td>' + esc(m.metier) + '</td><td>' + esc(m.type) + '</td><td><div class="chips">' + memberDomainsIn(DB, m).map(dom).filter(Boolean).map(function (d) { return '<span class="chip" title="' + esc(d.t) + '">' + pad(d.n) + '</span>'; }).join('') + '</div></td><td><button class="icon" data-act="rmm" data-id="' + m.id + '" aria-label="Retirer ' + esc(m.name) + '">×</button></td></tr>'; }).join('') +
+      '<p class="small">' + DB.members.filter(function (m) { return m.visible !== false; }).length + ' membres visibles sur le site · ' + DB.members.filter(function (m) { return m.visible === false; }).length + ' masqués. Seuls les membres visibles sont suggérés aux projets.</p>' +
+      '<section class="panel"><div class="tbl"><table><thead><tr><th>Membre</th><th>Métier</th><th>Statut</th><th>Sides</th><th>Sur le site</th><th></th></tr></thead><tbody>' +
+      DB.members.map(function (m) { var on = m.visible !== false; return '<tr class="' + (on ? '' : 'is-dim') + '"><td><div class="pname">' + avatar(m, true) + '<div><b>' + esc(m.name) + '</b><span>' + esc(m.city) + ((m.details || {}).discord ? ' · Discord ' + esc(m.details.discord) : '') + '</span></div></div></td><td>' + esc(m.metier) + '</td><td>' + esc(m.type) + '</td><td><div class="chips">' + memberDomainsIn(DB, m).map(dom).filter(Boolean).map(function (d) { return '<span class="chip" title="' + esc(d.t) + '">' + pad(d.n) + '</span>'; }).join('') + '</div></td>' +
+        '<td><button class="switch" role="switch" aria-checked="' + on + '" aria-label="Visible sur le site" data-act="mvis" data-id="' + m.id + '"></button></td><td><button class="icon" data-act="rmm" data-id="' + m.id + '" aria-label="Retirer ' + esc(m.name) + '">×</button></td></tr>'; }).join('') +
       '</tbody></table></div></section>' +
       '<section class="panel"><h2 class="h3">Ajouter un membre</h2><div class="form">' +
       '<div class="field"><label for="n-name">Nom</label><input type="text" id="n-name"></div><div class="field"><label for="n-metier">Métier (de l’arbre)</label><input type="text" id="n-metier" list="n-jobs" placeholder="Ex. Comptable, Designer…"><datalist id="n-jobs">' + allJobs().map(function (j) { return '<option value="' + esc(j) + '">'; }).join('') + '</datalist></div>' +
@@ -1575,31 +1684,46 @@
   ACT.addm = function () {
     var v = function (id) { return $('#' + id).value.trim(); };
     if (!v('n-name') || !v('n-metier')) { $('#n-err').textContent = 'Indique au moins le nom et le métier.'; return; }
-    DB.members.push({ id: Date.now(), slug: slug(v('n-name')), name: v('n-name'), metier: v('n-metier'), type: v('n-type'), city: v('n-city'), bio: v('n-bio'), domains: NEWD.slice(), img: '' });
+    DB.members.push({ id: Date.now(), slug: slug(v('n-name')), name: v('n-name'), metier: v('n-metier'), type: v('n-type'), city: v('n-city'), bio: v('n-bio'), domains: NEWD.slice(), img: '', visible: true, details: {} });
     NEWD = []; save(); aMembres(); toast('Membre ajouté');
   };
+  ACT.mvis = function (b) { var m = mem(b.dataset.id); m.visible = m.visible === false; save(); aMembres(); toast(m.visible ? m.name + ' est visible sur le site' : m.name + ' est masqué du site'); };
   ACT.rmm = function (b) { DB.members = DB.members.filter(function (m) { return m.id !== +b.dataset.id; }); save(); aMembres(); toast('Membre retiré'); };
 
   /* ----- Candidatures ----- */
   var CF = 'new';
   function aCandidatures() {
     admin('Cercle', 'Candidatures', '',
-      '<div class="seg" role="group" aria-label="Filtrer">' + [['new', 'À traiter'], ['ok', 'Acceptées'], ['no', 'Refusées'], ['all', 'Toutes']].map(function (x) { return '<button type="button" data-act="cf" data-v="' + x[0] + '" aria-pressed="' + (CF === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="toolbar"><div class="seg" role="group" aria-label="Filtrer">' + [['new', 'À traiter'], ['ok', 'Acceptées'], ['no', 'Refusées'], ['all', 'Toutes']].map(function (x) { return '<button type="button" data-act="cf" data-v="' + x[0] + '" aria-pressed="' + (CF === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="seg" role="group" aria-label="Type">' + [['tous', 'Tout'], ['membre', 'Adhésions (' + DB.subs.filter(function (s) { return s.kind === 'membre' && s.status === 'new'; }).length + ')'], ['candidature', 'Candidatures projet']].map(function (x) { return '<button type="button" data-act="ck" data-v="' + x[0] + '" aria-pressed="' + (CK2 === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
       '<section class="panel"><ul class="list">' + (function () {
-        var l = DB.subs.filter(function (s) { return CF === 'all' || s.status === CF; });
-        if (!l.length) return '<li><p class="small">Aucune candidature ici. Les propositions envoyées depuis la page Rejoindre arrivent dans cette liste.</p></li>';
+        var l = DB.subs.filter(function (s) { return (CF === 'all' || s.status === CF) && (CK2 === 'tous' || (s.kind || 'candidature') === CK2); });
+        if (!l.length) return '<li><p class="small">Rien ici. Les demandes « Devenir membre » (page Membres) et les propositions sur un projet (page Rejoindre) arrivent dans cette liste.</p></li>';
         return l.map(function (s) {
-          var p = proj(s.project), d = dom(s.domain);
-          return '<li style="align-items:flex-start"><span class="av av--lg">' + esc(s.name[0]) + '</span><div class="grow" style="display:grid;gap:6px"><div class="row" style="gap:8px"><b>' + esc(s.name) + '</b><span class="chip">' + esc(s.metier) + '</span><span class="small">' + esc(s.type) + '</span><span class="st st--' + s.status + '">' + SUB[s.status] + '</span></div>' +
-            '<p class="small">' + (p ? 'Projet : ' + esc(p.title) : 'Sans projet') + (d ? ' · Side ' + pad(d.n) + ' ' + esc(d.t) : '') + ' · ' + esc(s.when) + '</p>' + (s.msg ? '<p style="color:var(--iv80)">' + esc(s.msg) + '</p>' : '') + '<p class="small" style="user-select:all">' + esc(s.email) + (s.link ? ' · ' + esc(s.link) : '') + '</p></div>' +
-            (s.status === 'new' ? '<div class="row"><button class="btn btn--bord btn--sm" data-act="acc" data-id="' + s.id + '">' + (p && d ? 'Accepter et confier le side' : 'Accepter') + '</button><button class="btn btn--line btn--sm" data-act="ref" data-id="' + s.id + '">Refuser</button></div>' : '') + '</li>';
+          var p = proj(s.project), d = dom(s.domain), x = s.details || {}, isM = s.kind === 'membre';
+          var det = isM ? '<div class="adh">' +
+            '<p><span class="lbl">Code Discord</span><b class="sel">' + esc(x.code || '—') + '</b> · pseudo <b class="sel">' + esc(x.discord || '—') + '</b></p>' +
+            '<p class="small">' + [x.city, x.experience && 'Expérience : ' + x.experience, x.availability, (x.langs || []).join(', ')].filter(Boolean).map(esc).join(' · ') + '</p>' +
+            ((x.sides || []).length ? '<div class="chips">' + x.sides.map(dom).filter(Boolean).map(function (dd) { return '<span class="chip">' + pad(dd.n) + ' ' + esc(dd.t) + '</span>'; }).join('') + '</div>' : '') +
+            ((x.skills || []).length ? '<p class="small">Compétences : ' + x.skills.map(esc).join(', ') + '</p>' : '') +
+            ((x.contrib || []).length ? '<p class="small">Veut : ' + x.contrib.map(esc).join(', ') + '</p>' : '') + '</div>' : '';
+          return '<li style="align-items:flex-start"><span class="av av--lg">' + esc(s.name[0]) + '</span><div class="grow" style="display:grid;gap:6px"><div class="row" style="gap:8px"><b>' + esc(s.name) + '</b><span class="tag-kind tag-kind--' + (isM ? 'm' : 'c') + '">' + (isM ? 'Adhésion' : 'Candidature projet') + '</span><span class="chip">' + esc(s.metier) + '</span><span class="small">' + esc(s.type) + '</span><span class="st st--' + s.status + '">' + SUB[s.status] + '</span></div>' +
+            (isM ? '' : '<p class="small">' + (p ? 'Projet : ' + esc(p.title) : 'Sans projet') + (d ? ' · Side ' + pad(d.n) + ' ' + esc(d.t) : '') + ' · ' + esc(s.when) + '</p>') + (s.msg ? '<p style="color:var(--iv80)">' + esc(s.msg) + '</p>' : '') + det +
+            '<p class="small" style="user-select:all">' + esc(s.email) + (x.phone ? ' · ' + esc(x.phone) : '') + (s.link ? ' · ' + esc(s.link) : '') + (isM ? ' · ' + esc(s.when) : '') + '</p></div>' +
+            (s.status === 'new' ? '<div class="row"><button class="btn btn--bord btn--sm" data-act="acc" data-id="' + s.id + '">' + (isM ? 'Accepter et publier le profil' : p && d ? 'Accepter et confier le side' : 'Accepter') + '</button><button class="btn btn--line btn--sm" data-act="ref" data-id="' + s.id + '">Refuser</button></div>' : '') + '</li>';
         }).join('');
       })() + '</ul></section>');
   }
+  var CK2 = 'tous';
+  ACT.ck = function (b) { CK2 = b.dataset.v; aCandidatures(); };
   ACT.cf = function (b) { CF = b.dataset.v; aCandidatures(); };
   ACT.acc = function (b) {
     var s = DB.subs.find(function (x) { return x.id === +b.dataset.id; }); s.status = 'ok';
-    var m = { id: Date.now(), slug: slug(s.name), name: s.name, metier: s.metier, type: s.type, city: '', bio: s.msg || '', domains: s.domain ? [s.domain] : [], img: '' };
+    var x = s.details || {}, base = slug(s.name), sl = base, k = 2;
+    while (DB.members.some(function (mm) { return mm.slug === sl; })) sl = base + '-' + k++;
+    var m = { id: Date.now(), slug: sl, name: s.name, metier: s.metier, type: s.type, city: x.city || '', bio: s.msg || '', domains: (x.sides && x.sides.length ? x.sides : (s.domain ? [s.domain] : [])), img: '', visible: true,
+      details: s.kind === 'membre' ? { discord: x.discord, skills: x.skills, langs: x.langs, availability: x.availability, contrib: x.contrib, experience: x.experience, link: s.link, code: x.code } : {} };
+    if (s.kind === 'membre') { DB.members.push(m); save(); aCandidatures(); toast(s.name + ' est membre : son profil est visible sur le site'); return; }
     DB.members.push(m);
     var p = proj(s.project), d = dom(s.domain), msg = 'Accepté · ajouté aux membres';
     if (p && d) {
