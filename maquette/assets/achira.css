@@ -995,3 +995,13 @@ tr.click { cursor: pointer; } tr.click:hover td { background: rgba(238,229,211,.
   .path li { grid-template-columns: 1fr; padding: 12px 0; gap: 4px; }
   .collage img { max-height: 200px; }
 }
+.pcard, .pcard > *, .pcard__t, .cov, .cov__bar { min-width: 0; }
+.pcard__t p { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .pcard__t p { -webkit-line-clamp: 1; }
+  .role { padding: 10px 0; }
+  .role .role__t .eyebrow, .role > .role__t:first-child > span { display: none; }
+  .role .role__t span { font-size: 12px; }
+  .role .h4 { font-size: 15px; }
+  .role > .btn { min-height: 32px; padding: 0 12px; font-size: 10px; }
+}
